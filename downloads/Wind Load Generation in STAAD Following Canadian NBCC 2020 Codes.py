@@ -63,10 +63,6 @@ SAMPLE_SECTIONS = []
 EXPECTED_GZ = []
 EXPECTED_GX = []
 
-# #
-# workbook compatibility option, the old excel FILTER range stops before the last five member rows so this option keeps that same range when matching the orginal workbook output, turning it off uses all numeric member rows
-# # #
-ORIGINAL_COMPAT_MEMBER_TRIM = 5
 
 
 
@@ -155,8 +151,6 @@ def calculate_wind_outputs(
     height_adjustment: float,
     q: float,
     cg: float,
-    *,
-    exact_workbook_compatibility: bool = True,
 ):
     """Return (max_height, formatted_gz_lines, formatted_gx_lines)."""
 
@@ -233,15 +227,12 @@ def calculate_wind_outputs(
 
     max_height = max(heights)
 
-    filtered_members = members
-    if exact_workbook_compatibility and len(filtered_members) > ORIGINAL_COMPAT_MEMBER_TRIM:
-        filtered_members = filtered_members[:-ORIGINAL_COMPAT_MEMBER_TRIM]
 
     def direction_output(direction: str) -> List[str]:
         code = "GZ" if direction == "Z" else "GX"
         individual = []
 
-        for beam, node_a, node_b, prop, _material, _beta, _length in filtered_members:
+        for beam, node_a, node_b, prop, _material, _beta, _length in members:
             xa, ya, za = nodes[node_a]
             xb, yb, zb = nodes[node_b]
 
@@ -778,14 +769,6 @@ class WindLoadApp(tk.Tk):
         file_menu.add_command(label="Exit", command=self.destroy)
         menu.add_cascade(label="File", menu=file_menu)
 
-        self.exact_compatibility = tk.BooleanVar(value=True)
-        options = tk.Menu(menu, tearoff=False)
-        options.add_checkbutton(
-            label="Exact uploaded-workbook compatibility (omits its final 5 member rows)",
-            variable=self.exact_compatibility,
-            command=self.recalculate,
-        )
-        menu.add_cascade(label="Options", menu=options)
         self.config(menu=menu)
 
 
@@ -1034,14 +1017,12 @@ class WindLoadApp(tk.Tk):
                 height_adjustment,
                 q,
                 cg,
-                exact_workbook_compatibility=self.exact_compatibility.get(),
             )
             self.max_height_text.set(f"{max_height:g}")
             self.gz_output.set_lines(gz)
             self.gx_output.set_lines(gx)
-            mode = "exact uploaded-workbook compatibility" if self.exact_compatibility.get() else "fixed: all member rows processed"
             self.status_text.set(
-                f"Max height: {max_height:g} m   |   GZ groups: {len(gz)}   |   GX groups: {len(gx)}   |   {mode}"
+                f"Max height: {max_height:g} m   |   GZ groups: {len(gz)}   |   GX groups: {len(gx)}"
             )
         except Exception as exc:
             self.max_height_text.set("#N/A")
