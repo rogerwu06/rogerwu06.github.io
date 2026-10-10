@@ -1,0 +1,75 @@
+name: Restyle desktop STAAD GUIs
+on:
+  push:
+    paths:
+      - '.github/workflows/restyle-desktop-guis.yml'
+permissions:
+  contents: write
+jobs:
+  restyle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Match desktop styling to website
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          seismic = Path('downloads/Seismic Load Generation in STAAD Following Canadian NBCC 2020 Codes.py')
+          wind = Path('downloads/Wind Load Generation in STAAD Following Canadian NBCC 2020 Codes.py')
+
+          def replace_many(text, pairs):
+              for old, new in pairs:
+                  text = text.replace(old, new)
+              return text
+
+          s = seismic.read_text(encoding='utf-8')
+          s = replace_many(s, [
+              ('BG = "#FFFFFF"', 'BG = "#FFFFFF"'),
+              ('CARD = "#FFFFFF"', 'CARD = "#FFFFFF"'),
+              ('NAVY = "#000000"', 'NAVY = "#252525"'),
+              ('NAVY_2 = "#FFFFFF"', 'NAVY_2 = "#F5F5F5"'),
+              ('ACCENT = "#FFFFFF"', 'ACCENT = "#5B7F93"'),
+              ('ACCENT_LIGHT = "#FFFFFF"', 'ACCENT_LIGHT = "#F5F5F5"'),
+              ('INPUT_BG = "#FFFFFF"', 'INPUT_BG = "#FFFFFF"'),
+              ('OUTPUT_BG = "#FFFFFF"', 'OUTPUT_BG = "#FFFFFF"'),
+              ('GRID = "#000000"', 'GRID = "#BFC5C9"'),
+              ('TEXT = "#000000"', 'TEXT = "#252525"'),
+              ('MUTED = "#000000"', 'MUTED = "#687078"'),
+              ('DANGER = "#000000"', 'DANGER = "#8A3B3B"'),
+              ('SUCCESS = "#000000"', 'SUCCESS = "#496B58"'),
+              ('BUTTON_BG = "#FFFFFF"', 'BUTTON_BG = "#FFFFFF"'),
+              ('BUTTON_ACTIVE = "#FFFFFF"', 'BUTTON_ACTIVE = "#F2F2F2"'),
+              ('background=[("selected", "#000000")],', 'background=[("selected", "#5B7F93")],'),
+              ('foreground=[("selected", "#FFFFFF")],', 'foreground=[("selected", "#FFFFFF")],'),
+          ])
+          seismic.write_text(s, encoding='utf-8')
+
+          w = wind.read_text(encoding='utf-8')
+          w = replace_many(w, [
+              ('PALE_YELLOW = "#FFFFFF"', 'PALE_YELLOW = "#F5F5F5"'),
+              ('SECTION_GRAY = "#FFFFFF"', 'SECTION_GRAY = "#F3F3F3"'),
+              ('TITLE_BLUE = "#000000"', 'TITLE_BLUE = "#252525"'),
+              ('RED = "#000000"', 'RED = "#8A3B3B"'),
+              ('GRID = "#000000"', 'GRID = "#BFC5C9"'),
+              ('LIGHT_INPUT = "#FFFFFF"', 'LIGHT_INPUT = "#FFFFFF"'),
+              ('LIGHT_OUTPUT = "#FFFFFF"', 'LIGHT_OUTPUT = "#FFFFFF"'),
+              ('TEXT = "#000000"', 'TEXT = "#252525"'),
+              ('MUTED_TEXT = "#000000"', 'MUTED_TEXT = "#687078"'),
+              ('ACCENT = "#FFFFFF"', 'ACCENT = "#5B7F93"'),
+              ('ACCENT_DARK = "#FFFFFF"', 'ACCENT_DARK = "#456A7E"'),
+              ('BUTTON_BG = "#FFFFFF"', 'BUTTON_BG = "#FFFFFF"'),
+              ('BUTTON_ACTIVE = "#FFFFFF"', 'BUTTON_ACTIVE = "#F2F2F2"'),
+              ('background=[("selected", "#000000")],', 'background=[("selected", "#5B7F93")],'),
+          ])
+          wind.write_text(w, encoding='utf-8')
+          PY
+          python -m py_compile \
+            "downloads/Seismic Load Generation in STAAD Following Canadian NBCC 2020 Codes.py" \
+            "downloads/Wind Load Generation in STAAD Following Canadian NBCC 2020 Codes.py"
+          git config user.name "RogerWu"
+          git config user.email "wewf632@gmail.com"
+          git add downloads/*.py
+          git commit -m "Match desktop STAAD GUI styling to website"
+          git push
