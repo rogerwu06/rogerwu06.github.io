@@ -27,12 +27,12 @@ from collections import OrderedDict
 from tkinter import messagebox, ttk
 from typing import Callable, Iterable, List, Sequence
 
-# #
-# keep the names the same as the spreadsheet where possible because changing them makes checking the input and output harder and can cause mistakes when comparing columns, some of these names are not very good but they are left as is for that reason
-# #
-# # #
-# layout sizes below are mostly fixed values to make the tables fit on the screen, there is no calculation reason for most of these values and they may need to be changed if the window layout is changed later
+##
+# get the inputs
 #
+# #
+# inputs here
+##
 
 
 APP_TITLE = "STAAD.Pro Wind Input Spreadsheet"
@@ -55,7 +55,7 @@ NODE_HEADERS = ("NODE", "X", "Y", "Z")
 MEMBER_HEADERS = ("BEAM", "NODEA", "NODE B", "PROPERTY DEFINE", "MATERIAL", "BETA", "LENGTH")
 SECTION_HEADERS = ("prop", "name", "ax", "d", "bf", "tf", "tw", "in", "iy", "ix")
 
-# example input values from the orginal workbook, these are used when the program opens
+# input values
 SAMPLE_NODES = []
 SAMPLE_MEMBERS = []
 SAMPLE_SECTIONS = []
@@ -66,10 +66,10 @@ EXPECTED_GX = []
 
 
 
-# #
-# checks the fonts installed on the computer and uses the first one that is avaliable, this is only for the gui and does not affect the calc
-# #
 #
+# window stuff
+#
+##
 
 def _first_font(root: tk.Misc, preferred=("Calibri", "Aptos", "Arial", "Segoe UI")) -> str:
     try:
@@ -82,8 +82,8 @@ def _first_font(root: tk.Misc, preferred=("Calibri", "Aptos", "Arial", "Segoe UI
     return "TkDefaultFont"
 
 
-# values from the table come in as text so this converts them before the calc, also checks blank cells here so the main calc does not need to keep checking the same thing every time
-# #
+# input stuff
+#
 
 def _as_number(value: object, *, integer: bool = False, field: str = ""):
     text = str(value).strip()
@@ -103,22 +103,25 @@ def _as_number(value: object, *, integer: bool = False, field: str = ""):
     return number
 
 
-# format the number similar to excel general format because the staad output does not need extra zeros and it should stay close to the spreadsheet output
-# # #
+# make the output
+#
 
+#
+# main part
+#
 def _general_2dp(value: float) -> str:
-    # number is already rounded above, remove zeros after the decimal so for example 2.00 is written as 2 and not 2.00
+    # needed here
     return f"{value:.2f}".rstrip("0").rstrip(".")
 
 
 def _roundup_2(value: float) -> float:
-    # same idea as excel ROUNDUP, the small subtraction is needed because python floating point can give a number very slightly larger then the actual value and then it rounds one step too high
+    # inputs here
     return math.ceil(value * 100.0 - 1e-12) / 100.0
 
 
-# interpolation for k from the same points used in the spreadsheet, this is kept directly in the function so it is easier to compare the numbers with the excel calc
-#
+# path stuff
 # #
+#
 
 def _k_factor(l_over_halpha: float) -> float:
     x = l_over_halpha
@@ -137,13 +140,16 @@ def _k_factor(l_over_halpha: float) -> float:
     return 0.95
 
 
+##
+# get the inputs
+#
 # #
-# main wind calculation below, node member and section calculations are kept in the same function because it follows the order of the excel helper calculations and makes it easier to check which step is giving a diffrent value
-# #
-# #
-# keep the filter and group order the same because excel UNIQUE and FILTER keep the orginal order and if this is changed the final staad text will come out in a different order even when the numbers are the same
-# # #
+# files here
+##
 
+####
+# this part
+####
 def calculate_wind_outputs(
     node_rows: Sequence[Sequence[object]],
     member_rows: Sequence[Sequence[object]],
@@ -154,7 +160,7 @@ def calculate_wind_outputs(
 ):
     """Return (max_height, formatted_gz_lines, formatted_gx_lines)."""
 
-    # if there is a duplicate node number the first one is used, this is the same as the xlookup setup in the spreadsheet and duplicate node numbers should not normally be in the input anyway
+    # input values
     nodes = {}
     for row_index, row in enumerate(node_rows, start=1):
         if not row or all(str(v).strip() == "" for v in row):
@@ -212,7 +218,7 @@ def calculate_wind_outputs(
     if not members:
         raise ValueError("No member data is present.")
 
-    # height used for the wind calc is the lower member y value plus the height adjustment, this is the same value that was calculated in the excel helper columns
+    # input stuff
     heights = []
     for beam, node_a, node_b, *_ in members:
         lower_y = min(nodes[node_a][1], nodes[node_b][1])
@@ -236,7 +242,7 @@ def calculate_wind_outputs(
             xa, ya, za = nodes[node_a]
             xb, yb, zb = nodes[node_b]
 
-            # same filtering as the spreadsheet, for z wind the members running in z are not included and for x wind the members running in x are not included so make sure the direction check is not reversed
+            # leave this like this
             if direction == "Z":
                 keep = (xa != xb) or (ya != yb)
             else:
@@ -251,7 +257,7 @@ def calculate_wind_outputs(
             height = min(ya, yb) + height_adjustment
             ce = max((height / 10.0) ** 0.2, 0.90)
 
-            # 2.1 is used for both values here on purpose because the workbook has the same value for Cn and Ct at this step, the section dimensions are applied after this
+            # get the inputs
             fn = ce * cg * k * 2.1 * q
             ft = fn
             kn_per_m_fn = fn * d / 1000.0
@@ -259,7 +265,7 @@ def calculate_wind_outputs(
             load = _roundup_2(max(kn_per_m_fn, kn_per_m_ft))
             individual.append((beam, f"UNI {code} {_general_2dp(load)}"))
 
-        # group members that have the same load value but keep the order from the input, this is needed so the output stays in the same order as the spreadsheet and does not move around each time
+        # input values
         groups = OrderedDict()
         for beam, suffix in individual:
             groups.setdefault(suffix, []).append(str(beam))
@@ -268,9 +274,9 @@ def calculate_wind_outputs(
     return max_height, direction_output("Z"), direction_output("X")
 
 
-# pasted data can be tab seperated or just spaced depending on where it was copied from so this checks the common formats before putting the values into the table
+# input stuff
+#
 # #
-# # #
 
 def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     rows: List[List[str]] = []
@@ -286,7 +292,7 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
         else:
             parts = re.split(r"\s+", line)
 
-        # skip pasted header rows by checking if the first value is a number, all of the current input tables use numeric ids in the first column
+        # input values
         try:
             float(parts[0])
         except (ValueError, IndexError):
@@ -304,10 +310,10 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     return rows
 
 
-# #
-# treeview cells cant be editied directly so an entry box is placed over the selected cell when it is double clicked, after enter or clicking away the value is written back into the table
-# #
+##
+# inputs here
 #
+# #
 class EditableTree(tk.Frame):
     def __init__(
         self,
@@ -540,9 +546,12 @@ class EditableTree(tk.Frame):
         editor.bind("<Escape>", cancel)
 
 
-# output text box used for the staad lines and the copy button, kept as one class because both wind directions use the same setup
-# #
+# output stuff
+##
 
+#
+# main part
+#
 class OutputPanel(tk.Frame):
     def __init__(self, master, title: str, font_name: str):
         super().__init__(master, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
@@ -628,8 +637,8 @@ class OutputPanel(tk.Frame):
         self.update_idletasks()
 
 
-# #
-# outer canvas is used so the full page can scroll vertically when the screen height is smaller, the frame by itself does not provide scrolling
+####
+# keep this here
 # #
 
 class ScrollablePage(tk.Frame):
@@ -654,12 +663,12 @@ class ScrollablePage(tk.Frame):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def _fit_inner_width(self, event):
-        # make the page use the width of the visible window so the main gui does not need
-        # a left and right scroll bar, the output text boxes can still scroll if the staad text is wider
+        # window stuff
+        # make the output
         self.canvas.itemconfigure(self.window_id, width=max(1, event.width))
 
     def _mousewheel(self, event):
-        # mouse wheel scroll is only applied when the pointer is over this page
+        # leave this like this
         widget = self.winfo_containing(event.x_root, event.y_root)
         if widget is None or not self._is_descendant(widget):
             return
@@ -674,10 +683,10 @@ class ScrollablePage(tk.Frame):
         return False
 
 
-# # #
-# main window starts here, the padx and pady values are not all the same because the tables have different widths and this was adjusted so it fits without horizontal scrolling
-# #
-# #
+#
+# inputs here
+#
+##
 
 class WindLoadApp(tk.Tk):
     def __init__(self, *, smoke_test: bool = False):
@@ -707,9 +716,9 @@ class WindLoadApp(tk.Tk):
         if smoke_test:
             self.after(150, self.destroy)
 
+    ####
+    # output here
     # #
-    # gui formatting is set here, it is kept in this file so the program can be sent as one python file and does not need a seperate theme file
-    # # #
     def _configure_styles(self):
         style = ttk.Style(self)
         try:
@@ -717,8 +726,8 @@ class WindLoadApp(tk.Tk):
         except tk.TclError:
             pass
 
-        # ttk can use the windows theme and make the buttons look raised so this overrides the style to keep the buttons plain black and white
-        # #
+        # display stuff
+        ##
         for scrollbar_style in ("Vertical.TScrollbar", "Horizontal.TScrollbar"):
             style.configure(
                 scrollbar_style,
@@ -777,7 +786,7 @@ class WindLoadApp(tk.Tk):
         wrap = tk.Frame(parent, bg=WHITE)
         wrap.pack(fill="both", expand=True, padx=12, pady=10)
 
-        # user guide was on the intro sheet before, putting it here so it is seen before the tables and does not need a seperate intro page
+        # tables
         inst = tk.Frame(wrap, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
         inst.pack(fill="x", pady=(0, 10))
         tk.Label(
@@ -809,7 +818,7 @@ class WindLoadApp(tk.Tk):
             pady=5,
         ).pack(fill="x")
 
-        # top input area for the wind values, arranged similar to the orginal excel sheet
+        # get the inputs
         top = tk.Frame(wrap, bg=WHITE)
         top.pack(fill="x", pady=(0, 12))
 
@@ -915,7 +924,7 @@ class WindLoadApp(tk.Tk):
             if not readonly:
                 entry.bind("<KeyRelease>", lambda _e: self.schedule_recalc())
 
-        # three input tables from the workbook are shown below in the same general order
+        # input values
         tables = tk.Frame(wrap, bg=WHITE)
         tables.pack(fill="x", pady=(0, 12))
 
@@ -994,9 +1003,9 @@ class WindLoadApp(tk.Tk):
                 pass
         self._recalc_job = self.after(250, self.recalculate)
 
-    # #
-    # calculation runs automatic after a table or input is changed, small delay is used when pasting large tables so it does not run the full calc after every single row is added
     #
+    # inputs here
+    ####
     def recalculate(self):
         if self._building:
             return
@@ -1033,6 +1042,9 @@ class WindLoadApp(tk.Tk):
 
 
 
+####
+# this part
+####
 class SiteStyleWindApp(tk.Tk):
     def __init__(self, *, smoke_test: bool = False):
         super().__init__()
@@ -1142,7 +1154,7 @@ class SiteStyleWindApp(tk.Tk):
             self.status_text.set(str(exc))
 
 
-# self test compares the important output values with the expected workbook result, run this after changing the calc or table code to make sure the result did not change
+# input values
 # #
 
 def self_test() -> int:

@@ -29,17 +29,17 @@ from decimal import Decimal, ROUND_HALF_UP
 from tkinter import messagebox, ttk
 from typing import Callable, Iterable, List, Sequence
 
-# #
-# keep the names the same as the spreadsheet where possible because changing them makes checking the input and output harder and can cause mistakes when comparing columns, some of these names are not very good but they are left as is for that reason
-# #
-# # #
-# layout sizes below are mostly fixed values to make the tables fit on the screen, there is no calculation reason for most of these values and they may need to be changed if the window layout is changed later
+##
+# get the inputs
 #
+# #
+# inputs here
+##
 
 
 APP_TITLE = "STAAD.Pro Seismic Input Spreadsheet"
 
-# basic black and white colors so seismic and wind gui have the same format
+# staad output
 BG = "#FFFFFF"
 CARD = "#FFFFFF"
 NAVY = "#252525"              # old variable name is kept here but it is just black now
@@ -81,9 +81,9 @@ SAMPLE_REACTIONS_NO_PAD = []
 SAMPLE_REACTIONS_PAD = []
 
 
-# #
-# use the first font from this list that exists on the computer, this only changes how the gui looks
-# # #
+#
+# window stuff
+#
 
 def _first_font(root: tk.Misc) -> str:
     families = set(root.tk.call("font", "families"))
@@ -93,8 +93,8 @@ def _first_font(root: tk.Misc) -> str:
     return "TkDefaultFont"
 
 
-# pasted table values are text so convert the values here and stop if a value that should be a number is not valid, this prevents using bad values later in the seismic calculation
-# #
+# input values
+####
 
 def _as_number(value: object, *, field: str = "", integer: bool = False) -> float | int:
     text = str(value).strip().replace(",", "")
@@ -114,10 +114,13 @@ def _as_number(value: object, *, field: str = "", integer: bool = False) -> floa
     return num
 
 
-# use excel style rounding here because python round can give a diffrent result at the half value, Decimal is used so the final seismic force stays the same as the spreadsheet
+# inputs here
 # #
 #
 
+#
+# main part
+#
 def _excel_round_3(value: float) -> str:
     """Excel-like ROUND(value,3), rendered the way text concatenation normally appears."""
     d = Decimal(str(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
@@ -127,9 +130,9 @@ def _excel_round_3(value: float) -> str:
     return s or "0"
 
 
-# #
-# clipboard parser checks tabs first because the reaction load case name can contain spaces, if there are no tabs it also checks normal whitespace for simpler pasted data
-# # #
+##
+# inputs here
+#
 
 def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     rows: List[List[str]] = []
@@ -142,21 +145,21 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
         elif "," in raw_line:
             parts = [p.strip().strip('"') for p in raw_line.split(",")]
         else:
-            # whitespace parsing is mainly for the node table, reaction rows should normally be copied with tabs because the load case name can have spaces in it
+            # data table
             parts = re.split(r"\s+", raw_line.strip())
 
         try:
             float(parts[0])
         except (ValueError, IndexError):
-            # if the row does not start with a node number it is treated as a heading and skipped
+            # table stuff
             continue
 
         if len(parts) < expected_cols:
             parts.extend([""] * (expected_cols - len(parts)))
         elif len(parts) > expected_cols:
-            # reaction load case text can contain spaces so rebuild that field using all values between the node number and the six force and moment values at the end
+            # inputs here
             if expected_cols == 8 and len(parts) >= 9:
-                # the last six values are the forces and moments, anything in the middle is kept as the load case text even if it was split into more then one part
+                # get the inputs
                 parts = [parts[0], " ".join(parts[1:-6]), *parts[-6:]]
             else:
                 parts = parts[:expected_cols]
@@ -167,7 +170,7 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     return rows
 
 
-# make the node lookup before doing the calc so node elevation can be found from the node number without searching the full table each time
+# data table
 # #
 
 def _normalize_nodes(rows: Sequence[Sequence[object]]) -> dict[int, tuple[float, float, float]]:
@@ -189,10 +192,13 @@ def _normalize_nodes(rows: Sequence[Sequence[object]]) -> dict[int, tuple[float,
     return nodes
 
 
-# reaction nodes are checked for duplicates seperately because duplicate rows can mean more then one load case block was pasted and this would count the same support weight more then once
-# #
-# #
+# inputs here
+##
+####
 
+####
+# this part
+####
 def _normalize_reactions(rows: Sequence[Sequence[object]]) -> list[tuple[int, str, float, float, float, float, float, float]]:
     out = []
     seen: set[int] = set()
@@ -222,8 +228,8 @@ def _normalize_reactions(rows: Sequence[Sequence[object]]) -> list[tuple[int, st
     return out
 
 
-# wrap long staad output lines at about this length so the output is readable and close to how the spreadsheet writes the command lines, this value is only formatting
-# # #
+# input stuff
+# #
 
 def _wrap_staads(items: Sequence[str], max_len: int = 79) -> list[str]:
     """Match the workbook's intended semicolon grouping, but include every node."""
@@ -242,11 +248,11 @@ def _wrap_staads(items: Sequence[str], max_len: int = 79) -> list[str]:
     return lines
 
 
-# #
-# main seismic calculation is kept in the same function so the order can be compared to the spreadsheet, each row dictionary keeps the node elevation weight and force values used in the next steps
-# #
-# # #
-# with pad uses the same main calc but the pad rows are removed after the adjusted elevation is calculated, do not remove them before this point because the excluded weight and total weight will not match the workbook
+#
+# input values
+####
+#
+# table part
 #
 
 def calculate_seismic(
@@ -301,7 +307,7 @@ def calculate_seismic(
             "mz": mz,
         })
 
-    # keep the orginal row order when two nodes have the same elevation so the final staad output stays in a consistant order
+    # output stuff
     joined.sort(key=lambda r: (r["hi"], r["order"]))
 
     total_vertical = sum(r["fy"] for r in joined)
@@ -350,10 +356,13 @@ def calculate_seismic(
     }
 
 
-# #
-# table cells are editied by placing an entry box over the treeview cell because treeview does not have direct cell editing, after the edit the entry is removed and the table value is updated
+####
+# get the inputs
 # #
 
+#
+# main part
+#
 class EditableTree(tk.Frame):
     def __init__(
         self,
@@ -582,8 +591,8 @@ class EditableTree(tk.Frame):
         editor.bind("<Escape>", cancel)
 
 
-# output panel setup is kept here so the x and z output boxes use the same text size buttons and border settings
-# # #
+# output stuff
+##
 
 class OutputPanel(tk.Frame):
     def __init__(self, master, title: str, font_name: str):
@@ -667,8 +676,8 @@ class OutputPanel(tk.Frame):
         self.clipboard_append(value)
 
 
-# #
-# canvas and frame are used together to allow vertical scrolling for the page
+####
+# keep this here
 # #
 
 class ScrollablePage(tk.Frame):
@@ -696,8 +705,8 @@ class ScrollablePage(tk.Frame):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def _fit_width(self, event):
-        # horizontal scrolling is avaliable when the content is wider then the window,
-        # but the frame is also expanded when there is enough width so the content does not stay narrow
+        # window stuff
+        # table part
         req = self.inner.winfo_reqwidth()
         self.canvas.itemconfigure(self.window_id, width=max(event.width, req))
 
@@ -722,10 +731,13 @@ class ScrollablePage(tk.Frame):
         return False
 
 
-# one page is created for each workbook mode, most of the page setup is left together because the same input blocks and tables need to be arranged in one place
+# input values
+#
 # #
-# # #
 
+####
+# this part
+####
 class ModePage:
     def __init__(self, app: "SeismicApp", parent: tk.Frame, *, with_pad: bool):
         self.app = app
@@ -783,7 +795,7 @@ class ModePage:
             pady=4,
         ).pack(side="right")
 
-        # instructions were on the old intro sheet, keeping it at the top now because it is easier to see while doing the inputs
+        # get the inputs
         inst = tk.Frame(p, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
         inst.pack(fill="x", padx=18, pady=(0, 10))
         tk.Label(
@@ -818,7 +830,7 @@ class ModePage:
         body = tk.Frame(p, bg=WHITE)
         body.pack(fill="both", expand=True, padx=18, pady=(0, 18))
 
-        # top information and seismic input row
+        # input values
         top = tk.Frame(body, bg=WHITE)
         top.pack(fill="x", pady=(0, 10))
 
@@ -864,8 +876,8 @@ class ModePage:
             entry.grid(row=row, column=col+1, sticky="ew", padx=(0, 8), pady=2)
             entry.bind("<KeyRelease>", lambda _e: self.app.schedule_all())
 
-        # keep site class and the reference values editable the same as the workbook,
-        # the final vmax equation uses Sa(0.2) IE Rd and Ro directly but the other fields are still shown for checking and input record
+        # input stuff
+        # inputs here
         seismic.grid_columnconfigure(1, weight=1)
         seismic.grid_columnconfigure(3, weight=1)
 
@@ -926,7 +938,7 @@ class ModePage:
             pady=7,
         ).grid(row=8, column=0, columnspan=4, sticky="ew")
 
-        # input tables for the first and second spreadsheet steps
+        # get the inputs
         tables = tk.Frame(body, bg=WHITE)
         tables.pack(fill="x", pady=(0, 10))
 
@@ -996,9 +1008,9 @@ class ModePage:
                 pass
         self._job = self.app.after(220, self.recalculate)
 
-    # #
-    # calculation runs automatic after a table or input is changed, small delay is used when pasting large tables so it does not run the full calc after every single row is added
     #
+    # input stuff
+    ####
     def recalculate(self):
         self._job = None
         try:
@@ -1034,10 +1046,10 @@ class ModePage:
             self.status.set(str(exc))
 
 
-# #
-# main window tabs and shared formatting are set here, most widths are fixed to fit the current screen layout so check both tabs if any table width is changed because one tab can clip before the other one does
-# #
 #
+# staad output
+#
+##
 class SeismicApp(tk.Tk):
     def __init__(self, *, smoke_test: bool = False):
         super().__init__()
@@ -1068,9 +1080,9 @@ class SeismicApp(tk.Tk):
         if smoke_test:
             self.after(300, self.destroy)
 
+    ####
+    # staad output
     # #
-    # gui formatting is set here, it is kept in this file so the program can be sent as one python file and does not need a seperate theme file
-    # # #
     def _configure_styles(self):
         style = ttk.Style(self)
         try:
@@ -1078,8 +1090,8 @@ class SeismicApp(tk.Tk):
         except tk.TclError:
             pass
 
-        # windows ttk theme can change the button border and fill so the style is set here to keep the same plain black and white look on different computers
-        # #
+        # window stuff
+        ##
         for scrollbar_style in ("Vertical.TScrollbar", "Horizontal.TScrollbar"):
             style.configure(
                 scrollbar_style,
@@ -1160,8 +1172,8 @@ class SeismicApp(tk.Tk):
                 pass
         self._all_job = self.after(220, self.recalculate_all)
 
-    # # #
-    # both tabs calculate seperately because each tab has its own pasted node and reaction tables even though most of the input values start with the same defaults
+    ####
+    # input stuff
     # #
     def recalculate_all(self):
         self._all_job = None
@@ -1376,9 +1388,12 @@ class SiteStyleSeismicApp(tk.Tk):
             self.status.set(str(exc))
 
 
-# basic self test for the seismic calculation, this should be run after any code changes to check that the expected result is still the same
-# # #
+# do the calc
+##
 
+#
+# main part
+#
 def self_test() -> int:
     print("No embedded project dataset is included in this public version.")
     return 0

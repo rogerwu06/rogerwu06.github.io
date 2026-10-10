@@ -57,6 +57,9 @@ def _distance3(a, b):
     )
 
 
+#
+# main part
+#
 def _dot(a, b):
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
 
@@ -72,6 +75,9 @@ def _unit(v):
     return (v[0]/n, v[1]/n, v[2]/n)
 
 
+####
+# this part
+####
 def _bbox_dims(bb):
     low = bb['low']
     high = bb['high']
@@ -97,6 +103,9 @@ def _bbox_diag(bb):
     return max(math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2]), 1.0e-12)
 
 
+#
+# main part
+#
 def _merge_bboxes(boxes):
     if not boxes:
         return {'low': (0.0, 0.0, 0.0), 'high': (1.0, 1.0, 1.0)}
@@ -130,6 +139,9 @@ def _shape_axis_ratios(bb):
     return (d[0]/m, d[1]/m, d[2]/m)
 
 
+####
+# this part
+####
 def _part_match_descriptor(bb, global_bb):
     return {
         'bbox': bb,
@@ -139,12 +151,12 @@ def _part_match_descriptor(bb, global_bb):
 
 
 def _part_match_score(a, b):
-    # Axis-specific proportions are useful for distinguishing run / branch /
-    # fitting bodies without using any actual diameter or length.
+    # window stuff
+    # main part
     axis_score = _distance3(a['axis_ratio'], b['axis_ratio'])
 
-    # Position is normalized by the complete assembly extents so a larger or
-    # smaller Case still matches by general arrangement.
+    # stuff below
+    # needed here
     center_score = _distance3(a['relative_center'], b['relative_center'])
 
     return 3.0*axis_score + 2.0*center_score
@@ -186,6 +198,9 @@ def _resolve_shortcut(shortcut_path):
     return info
 
 
+#
+# main part
+#
 def _extract_command_files(text):
     out = []
     if not text:
@@ -227,7 +242,7 @@ def _find_abaqus_command(selected_path):
         candidates.extend(_extract_command_files(target))
         candidates.extend(_extract_command_files(args))
 
-        # Search around the shortcut target/workdir only if needed.
+        # leave this like this
         roots = []
         for seed in (target, workdir):
             if not seed:
@@ -263,7 +278,7 @@ def _find_abaqus_command(selected_path):
     else:
         candidates.append(p)
 
-    # A few normal SIMULIA command locations, but these are fallbacks only.
+    # this part
     drive = os.environ.get('SystemDrive', 'C:')
     candidates.extend([
         os.path.join(drive + os.sep, 'SIMULIA', 'Commands', 'abq2023.bat'),
@@ -302,6 +317,9 @@ def _timestamped_backup(cae_path):
     return backup
 
 
+####
+# this part
+####
 def _cae_lock_candidates(cae_path):
     base, _ = os.path.splitext(cae_path)
     return [cae_path + '.lck', base + '.lck']
@@ -551,8 +569,8 @@ def _normal_python_gui():
             return
         cae, step, command_file = settings
 
-        # Full transfer now ALWAYS starts with the minimal Abaqus/STEP probe.
-        # The backup is not created until that probe succeeds.
+        # model stuff
+        # main part
         holder['settings'] = settings
         holder['backup'] = ''
         holder['phase'] = 'probe_then_full'
@@ -587,8 +605,8 @@ def _normal_python_gui():
                     phase = holder.get('phase', '')
                     settings = holder.get('settings')
 
-                    # A full run first executes the probe. If the probe passes,
-                    # create the backup and launch the full worker automatically.
+                    # stuff below
+                    # needed here
                     if phase == 'probe_then_full':
                         if value == 0 and settings:
                             cae, step, command_file = settings
@@ -624,7 +642,7 @@ def _normal_python_gui():
                             _show_failure_details(value)
                         continue
 
-                    # Full transfer result
+                    # results here
                     set_buttons(False)
                     if value == 0:
                         status_var.set('Transfer finished successfully.')
@@ -683,6 +701,9 @@ def _normal_python_gui():
     root.mainloop()
     return 0
 
+#
+# main part
+#
 def _abaqus_worker(template_cae, step_file):
     from abaqus import mdb, openMdb
     from abaqusConstants import (
@@ -695,9 +716,9 @@ def _abaqus_worker(template_cae, step_file):
     report_lines = []
     warnings = []
 
-    # Geometry queries such as face.getNormal()/getSize() are expensive in
-    # the Abaqus kernel.  Cache target descriptors once per instance/entity
-    # sequence instead of recomputing them for every Set/Surface item.
+    # mesh stuff
+    # abaqus part
+    # main part
     descriptor_cache = {}
 
     def log(text=''):
@@ -726,7 +747,7 @@ def _abaqus_worker(template_cae, step_file):
             return []
 
     def instance_bbox(inst):
-        # Faces work for normal solid geometry.  Cells are a fallback.
+        # geometry stuff
         try:
             if len(inst.faces) > 0:
                 return inst.faces.getBoundingBox()
@@ -863,7 +884,7 @@ def _abaqus_worker(template_cae, step_file):
         }
 
     def entity_score(old_d, new_d, old_bb, new_bb, is_face=False):
-        # Relative location within the component is the strongest signal.
+        # needed here
         s = 4.0 * _distance3(
             old_d['normalized_point'],
             new_d['normalized_point']
@@ -890,7 +911,7 @@ def _abaqus_worker(template_cae, step_file):
             n1 = old_d.get('normal', (0.0, 0.0, 0.0))
             n2 = new_d.get('normal', (0.0, 0.0, 0.0))
             if _norm(n1) > 0.5 and _norm(n2) > 0.5:
-                # absolute dot allows for CAD import flipping a face normal
+                # leave this like this
                 s += 2.0 * (1.0 - abs(_dot(n1, n2)))
 
             e1 = int(old_d.get('edge_count', 0))
@@ -908,11 +929,11 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # Imported/assembly instance names are stable and are the best key.
+        # table part
         if inst_name:
             return (kind, inst_name, len(seq))
 
-        # Fallback for sequences that do not expose instanceName.
+        # keep this here
         try:
             c = _bbox_center(owner_bb)
             d = _bbox_dims(owner_bb)
@@ -1033,8 +1054,8 @@ def _abaqus_worker(template_cae, step_file):
             'items': []
         }
 
-        # Abaqus geometric sets should only contain one geometric entity type.
-        # Try the normal types in the order most relevant to this model.
+        # abaqus stuff
+        # stuff below
         try:
             if len(set_obj.faces) > 0:
                 data['type'] = 'faces'
@@ -1095,8 +1116,8 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # Mesh sets are intentionally not transferred here because imported
-        # geometry is deliberately left unmeshed.
+        # mesh here
+        # geometry stuff
         return data
 
     def capture_surface(surface_obj, bbox_lookup, default_bbox):
@@ -1105,7 +1126,7 @@ def _abaqus_worker(template_cae, step_file):
             'sidedness_known': False
         }
 
-        # On some Abaqus versions these members are queryable.
+        # abaqus stuff
         for side_name in ('side1Faces', 'side2Faces', 'side12Faces'):
             try:
                 seq = getattr(surface_obj, side_name)
@@ -1126,9 +1147,9 @@ def _abaqus_worker(template_cae, step_file):
                 pass
 
         if not data['sides']:
-            # Surface.faces is consistently available, but some releases do
-            # not expose which SIDE keyword built it.  SIDE1 is used as the
-            # fallback and the transfer report calls this out.
+            # keep this here
+            # main part
+            # stuff below
             try:
                 vals = []
                 for x in surface_obj.faces:
@@ -1150,7 +1171,7 @@ def _abaqus_worker(template_cae, step_file):
         sets = {}
         surfaces = {}
 
-        # User sets
+        # needed here
         try:
             for name in repo_keys(owner.sets):
                 try:
@@ -1160,7 +1181,7 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # Internal picked sets
+        # leave this like this
         try:
             for name in repo_keys(owner.allInternalSets):
                 if name not in sets:
@@ -1175,7 +1196,7 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # User surfaces
+        # this part
         try:
             for name in repo_keys(owner.surfaces):
                 try:
@@ -1189,7 +1210,7 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # Internal picked surfaces
+        # keep this here
         try:
             for name in repo_keys(owner.allInternalSurfaces):
                 if name not in surfaces:
@@ -1331,9 +1352,9 @@ def _abaqus_worker(template_cae, step_file):
             if mapped:
                 actual_side = side_name
 
-                # If Abaqus did expose original sidedness and every imported
-                # face normal is reversed, flip SIDE1 <-> SIDE2 to preserve
-                # the physical side of the surface.
+                # abaqus stuff
+                # stuff below
+                # needed here
                 if captured.get('sidedness_known') and side_dots:
                     avg_dot = sum(side_dots) / float(len(side_dots))
                     if avg_dot < -0.5:
@@ -1358,9 +1379,9 @@ def _abaqus_worker(template_cae, step_file):
         if old_instance_name in instance_names:
             return old_instance_name
 
-        # Abaqus sometimes reports an empty instance name for assembly-owned
-        # regions containing geometry from a single instance.  Do not guess
-        # unless there is exactly one possible instance.
+        # model stuff
+        # mesh stuff
+        # keep this here
         if (not old_instance_name) and len(instance_names) == 1:
             return instance_names[0]
 
@@ -1429,9 +1450,9 @@ def _abaqus_worker(template_cae, step_file):
             return True, max(scores) if scores else 0.0, len(mapped)
 
         except Exception as e:
-            # If this was an internal region that Abaqus refuses to delete,
-            # leave it in place and report it rather than silently inventing
-            # a different name (attributes reconnect by exact region name).
+            # abaqus run
+            # stuff below
+            # needed here
             warn('Could not recreate assembly set "%s": %s' % (name, e))
             return False, max(scores) if scores else 0.0, len(mapped)
 
@@ -1562,7 +1583,7 @@ def _abaqus_worker(template_cae, step_file):
 
         applied = 0
 
-        # First try exact named region reconstruction.
+        # leave this like this
         for x in assignments:
             rn = x.get('region_name')
             sn = x.get('section_name')
@@ -1579,10 +1600,10 @@ def _abaqus_worker(template_cae, step_file):
                         % (sn, rn, old_part_name, e)
                     )
 
-        # Very common case: one material/section for the entire component.
-        # If the old part only had one section, applying it to all imported
-        # cells is safer than losing the assignment because a partitioned
-        # template cell-set collapsed into one unpartitioned STEP cell.
+        # this part
+        # geometry stuff
+        # mesh stuff
+        # meshing part
         if applied == 0 and len(unique_sections) == 1:
             try:
                 whole_name = '__AUTO_WHOLE_PART_SECTION_REGION__'
@@ -1612,9 +1633,9 @@ def _abaqus_worker(template_cae, step_file):
                 % old_part_name
             )
 
-    # --------------------------------------------------------------
-    # start actual worker
-    # --------------------------------------------------------------
+    ##
+    # leave this like this
+    #
 
     template_cae = os.path.abspath(template_cae)
     step_file = os.path.abspath(step_file)
@@ -1640,8 +1661,8 @@ def _abaqus_worker(template_cae, step_file):
     log('Opening template CAE...')
     openMdb(pathName=template_cae)
 
-    # Pick the model with the most actual analysis content.  No model name is
-    # hard-coded.
+    # keep this here
+    # main part
     model_names = repo_keys(mdb.models)
     if not model_names:
         raise Exception('No models were found in the template CAE.')
@@ -1699,7 +1720,7 @@ def _abaqus_worker(template_cae, step_file):
 
     old_global_bb = _merge_bboxes(list(old_instance_bboxes.values()))
 
-    # Group template instances by the Part that they instance.
+    # geometry stuff
     old_part_to_instances = {}
     for inst_name in old_instance_names:
         inst = assembly.instances[inst_name]
@@ -1709,7 +1730,7 @@ def _abaqus_worker(template_cae, step_file):
             part_name = None
 
         if not part_name:
-            # fallback by checking object identity where possible
+            # needed here
             for pn in repo_keys(model.parts):
                 try:
                     if assembly.instances[inst_name].part == model.parts[pn]:
@@ -1731,11 +1752,11 @@ def _abaqus_worker(template_cae, step_file):
         log('  %s -> instance(s): %s' % (pn, ', '.join(old_part_to_instances[pn])))
     log('')
 
-    # --------------------------------------------------------------
-    # Determine which internal picked regions actually matter.
-    # The old version copied every allInternalSet/allInternalSurface in the
-    # database.  That can be extremely expensive and most of them are unused.
-    # --------------------------------------------------------------
+    #
+    # this part
+    # keep this here
+    # main part
+    ####
 
     attribute_regions = []
     required_region_names = set()
@@ -1772,7 +1793,7 @@ def _abaqus_worker(template_cae, step_file):
             required_region_names.add(name)
         return name
 
-    # Loads and BCs are the most important direct region references.
+    # do the calc
     try:
         for name in repo_keys(model.boundaryConditions):
             obj = model.boundaryConditions[name]
@@ -1803,9 +1824,9 @@ def _abaqus_worker(template_cae, step_file):
     except Exception:
         pass
 
-    # Also inspect common region-bearing attributes on constraints,
-    # interactions, predefined fields, and output requests.  This is generic:
-    # no specific load/surface names are hard coded.
+    # leave this like this
+    # output stuff
+    # main calc
     region_attrs = (
         'region', 'surface', 'master', 'slave', 'main', 'secondary',
         'controlPoint', 'bodyRegion', 'tieRegion', 'region1', 'region2'
@@ -1834,9 +1855,9 @@ def _abaqus_worker(template_cae, step_file):
         log('  ' + ', '.join(sorted(required_region_names)))
     log('')
 
-    # --------------------------------------------------------------
-    # capture template part-level regions and sections before changes
-    # --------------------------------------------------------------
+    ####
+    # geometry stuff
+    # #
 
     old_part_capture = {}
 
@@ -1846,9 +1867,9 @@ def _abaqus_worker(template_cae, step_file):
         rep_inst = assembly.instances[rep_inst_name]
         rep_bb = old_instance_bboxes[rep_inst_name]
 
-        # Capture the regions through the INSTANCE, not through the raw part.
-        # That gives assembly coordinates and makes the method insensitive to
-        # any positioning transform on the template part.
+        # meshing part
+        # this part
+        # geometry stuff
         p_sets = {}
         p_surfaces = {}
         section_assignments = capture_section_assignments(part)
@@ -1857,8 +1878,8 @@ def _abaqus_worker(template_cae, step_file):
         )
         needed_part_internal = set(required_region_names) | section_region_names
 
-        # Instance repositories expose normal user sets/surfaces inherited from
-        # the Part. These are retained because their number is normally small.
+        # main part
+        # meshing part
         try:
             for name in repo_keys(rep_inst.sets):
                 try:
@@ -1885,14 +1906,14 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # Also include internal part regions if available.
+        # mesh here
         try:
             for name in repo_keys(part.allInternalSets):
                 if name not in p_sets and name in needed_part_internal:
                     try:
-                        # Part coordinates are normally the same orientation as
-                        # the representative instance.  Internal regions are a
-                        # fallback and may have no instanceName.
+                        # geometry stuff
+                        # this part
+                        # keep this here
                         p_sets[name] = capture_set(
                             part.allInternalSets[name],
                             {},
@@ -1925,8 +1946,8 @@ def _abaqus_worker(template_cae, step_file):
             'section_assignments': section_assignments
         }
 
-    # Capture all normal assembly user regions, but only internal picked
-    # regions that are actually referenced by an analysis object.
+    # main part
+    # stuff below
     root_sets = {}
     root_surfaces = {}
 
@@ -1981,7 +2002,7 @@ def _abaqus_worker(template_cae, step_file):
     log('  Surfaces: %d' % len(root_surfaces))
     log('')
 
-    # BC/load region names were captured before any geometry was changed.
+    # calc part
     log('Template boundary conditions / loads:')
     for x in attribute_regions:
         log(
@@ -1990,9 +2011,9 @@ def _abaqus_worker(template_cae, step_file):
         )
     log('')
 
-    # --------------------------------------------------------------
-    # import STEP - one Part per body, automatically determined
-    # --------------------------------------------------------------
+    ####
+    # mesh here
+    # #
 
     log('Opening STEP geometry...')
     geometry_file = mdb.openStep(fileName=step_file, scale=1.0)
@@ -2014,7 +2035,7 @@ def _abaqus_worker(template_cae, step_file):
     for body_num in range(1, number_of_bodies + 1):
         part_name = '__AUTO_STEP_BODY_%03d__' % body_num
 
-        # Avoid collision if a prior failed run left objects behind.
+        # main part
         if part_name in repo_keys(model.parts):
             try:
                 del model.parts[part_name]
@@ -2057,9 +2078,9 @@ def _abaqus_worker(template_cae, step_file):
 
     new_global_bb = _merge_bboxes(list(new_body_bboxes.values()))
 
-    # --------------------------------------------------------------
-    # geometry-driven body matching
-    # --------------------------------------------------------------
+    ##
+    # mesh here
+    #
 
     old_desc = {}
     for pn in old_part_names:
@@ -2075,9 +2096,9 @@ def _abaqus_worker(template_cae, step_file):
             new_global_bb
         )
 
-    # Build every old/new pairing and greedily take the lowest available
-    # score.  This avoids any dependency on Case numbers, diameters, lengths,
-    # or FreeCAD object names.
+    # this part
+    # keep this here
+    # main part
     pairs = []
     for old_pn in old_part_names:
         for new_pn in imported_parts:
@@ -2146,10 +2167,10 @@ def _abaqus_worker(template_cae, step_file):
 
     log('')
 
-    # --------------------------------------------------------------
-    # recreate Part-level sets/surfaces and section assignments on
-    # each matched imported body while temporary instances still exist
-    # --------------------------------------------------------------
+    ####
+    # mesh stuff
+    # leave this like this
+    #
 
     temp_by_part = dict(zip(imported_parts, temp_instance_names))
 
@@ -2223,9 +2244,9 @@ def _abaqus_worker(template_cae, step_file):
 
         log('')
 
-    # --------------------------------------------------------------
-    # remove temporary STEP instances
-    # --------------------------------------------------------------
+    ##
+    # mesh stuff
+    #
 
     for inst_name in temp_instance_names:
         try:
@@ -2239,11 +2260,11 @@ def _abaqus_worker(template_cae, step_file):
     except Exception:
         pass
 
-    # --------------------------------------------------------------
-    # replace the actual template instances.
-    # Instance names remain the same, which is important because Regions
-    # refer to named sets/surfaces and their owners.
-    # --------------------------------------------------------------
+    # #
+    # leave this like this
+    # this part
+    # keep this here
+    #
 
     log('Replacing template instances with imported STEP geometry...')
     for old_pn in old_part_names:
@@ -2257,7 +2278,7 @@ def _abaqus_worker(template_cae, step_file):
             try:
                 inst = assembly.instances[inst_name]
 
-                # Record any positioning transform for the report.
+                # stuff below
                 try:
                     tr = inst.getTranslation()
                 except Exception:
@@ -2288,8 +2309,8 @@ def _abaqus_worker(template_cae, step_file):
                     except Exception:
                         pass
 
-                # applyConstraints=False keeps the old placement rather than
-                # attempting to solve template assembly positioning constraints.
+                # needed here
+                # leave this like this
                 inst.replace(
                     instanceOf=new_part,
                     applyConstraints=False
@@ -2305,7 +2326,7 @@ def _abaqus_worker(template_cae, step_file):
     except Exception as e:
         warn('Assembly regeneration after instance replacement reported: %s' % e)
 
-    # New assembly bboxes after replacement.
+    # this part
     new_instance_bboxes = {}
     for inst_name in old_instance_names:
         if inst_name in repo_keys(assembly.instances):
@@ -2314,14 +2335,14 @@ def _abaqus_worker(template_cae, step_file):
             except Exception:
                 pass
 
-    # --------------------------------------------------------------
-    # recreate assembly-level sets and surfaces with their OLD NAMES.
-    # This is the mechanism that allows existing BCs/loads/interactions
-    # to reconnect without hard-coding those object definitions.
-    # --------------------------------------------------------------
+    #
+    # main part
+    # main calc
+    # needed here
+    ####
 
-    # The actual template instances now point at the replacement parts.
-    # Discard any sequence descriptor cache made for temporary STEP instances.
+    # mesh stuff
+    # meshing part
     descriptor_cache.clear()
 
     log('')
@@ -2371,12 +2392,12 @@ def _abaqus_worker(template_cae, step_file):
                     % (surf_name, max_score)
                 )
 
-    # --------------------------------------------------------------
-    # clean unused template parts so the output contains the replacement
-    # geometry rather than the old partitioned geometry as spare Parts.
-    # Then rename imported bodies back to the original template Part names
-    # when possible.
-    # --------------------------------------------------------------
+    #
+    # staad output
+    # mesh stuff
+    # meshing part
+    # this part
+    #
 
     log('')
     log('Cleaning old template geometry Parts...')
@@ -2387,14 +2408,14 @@ def _abaqus_worker(template_cae, step_file):
 
         new_pn = mapping[old_pn]['new_part']
 
-        # At this point all original instances should reference the new part.
+        # mesh stuff
         try:
             if old_pn in repo_keys(model.parts):
                 del model.parts[old_pn]
         except Exception as e:
             warn('Could not delete unused old template Part "%s": %s' % (old_pn, e))
 
-        # Rename new imported Part to the familiar original Part name.
+        # meshing part
         try:
             if new_pn in repo_keys(model.parts) and old_pn not in repo_keys(model.parts):
                 model.parts.changeKey(fromName=new_pn, toName=old_pn)
@@ -2405,8 +2426,8 @@ def _abaqus_worker(template_cae, step_file):
                 % (new_pn, old_pn, e)
             )
 
-    # Extra bodies remain as clearly named imported Parts and are instanced.
-    # Usually there will be none if future CAD files keep the same components.
+    # mesh here
+    # save files
     for idx, new_pn in enumerate(extra_new):
         if new_pn not in repo_keys(model.parts):
             continue
@@ -2427,9 +2448,9 @@ def _abaqus_worker(template_cae, step_file):
     except Exception as e:
         warn('Final assembly regeneration reported: %s' % e)
 
-    # --------------------------------------------------------------
-    # verification of BC and Load region references
-    # --------------------------------------------------------------
+    #
+    # main calc
+    ####
 
     log('')
     log('BOUNDARY CONDITION / LOAD REGION CHECK')
@@ -2458,8 +2479,8 @@ def _abaqus_worker(template_cae, step_file):
                 % (x['category'], x['name'], x['class'], rn)
             )
 
-    # Explicitly call out symmetry BCs because they are especially important
-    # to this workflow.
+    # stuff below
+    # needed here
     log('')
     log('SYMMETRY BC SUMMARY')
     log('-' * 78)
@@ -2490,9 +2511,9 @@ def _abaqus_worker(template_cae, step_file):
             'If the template uses symmetry, inspect the output CAE before analysis.'
         )
 
-    # --------------------------------------------------------------
-    # final save + report
-    # --------------------------------------------------------------
+    #
+    # this part
+    ####
 
     log('')
     log('Saving converted model...')
@@ -2620,6 +2641,9 @@ def _worker_entry():
         return 1
 
 
+####
+# this part
+####
 def main():
     if os.environ.get(WORKER_FLAG, '') == '1':
         return _worker_entry()
