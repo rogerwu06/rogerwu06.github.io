@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 $$('[data-grid-paste]').forEach(b=>b.addEventListener('click',()=>pasteGrid(b.dataset.gridPaste)));
 $$('[data-grid-add]').forEach(b=>b.addEventListener('click',()=>addGridRow(b.dataset.gridAdd)));
 $$('[data-grid-clear]').forEach(b=>b.addEventListener('click',()=>resetGrid(b.dataset.gridClear,10)));
-$$('[data-seismic-mode]').forEach(b=>b.addEventListener('click',()=>{seismicWithPad=b.dataset.seismicMode==='true';$$('[data-seismic-mode]').forEach(x=>x.classList.toggle('active',x===b));status('seismic-status',`Mode: ${seismicWithPad?'WITH PAD':'NO PAD'}`)}));
+$$('[data-seismic-mode]').forEach(b=>b.addEventListener('click',()=>{seismicWithPad=b.dataset.seismicMode==='true';$$('[data-seismic-mode]').forEach(x=>x.classList.toggle('active',x===b));status('seismic-status',`Mode: ${seismicWithPad?'With pad':'No pad'}`)}));
 $('seismic-calc')?.addEventListener('click',calculateSeismic);$('wind-calc')?.addEventListener('click',calculateWind);
 $$('[data-copy-target]').forEach(b=>b.addEventListener('click',()=>copyTarget(b.dataset.copyTarget,b)));
 });
