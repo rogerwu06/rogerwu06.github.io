@@ -4,8 +4,6 @@ import re
 from collections import OrderedDict
 from typing import List, Sequence
 
-ORIGINAL_COMPAT_MEMBER_TRIM = 5
-
 def _as_number(value: object, *, integer: bool = False, field: str = ""):
     text = str(value).strip()
     if text == "":
@@ -52,8 +50,6 @@ def calculate_wind_outputs(
     height_adjustment: float,
     q: float,
     cg: float,
-    *,
-    exact_workbook_compatibility: bool = True,
 ):
     """Return (max_height, formatted_gz_lines, formatted_gx_lines)."""
     nodes = {}
@@ -120,22 +116,18 @@ def calculate_wind_outputs(
         if height < 0:
             raise ValueError(
                 f"Beam {beam} has calculated height {height:g} m. "
-                "The spreadsheet's Ce equation is not valid for a negative height; "
+                "The Ce equation is not valid for a negative height; "
                 "adjust the base elevation/height adjustment."
             )
         heights.append(height)
 
     max_height = max(heights)
 
-    filtered_members = members
-    if exact_workbook_compatibility and len(filtered_members) > ORIGINAL_COMPAT_MEMBER_TRIM:
-        filtered_members = filtered_members[:-ORIGINAL_COMPAT_MEMBER_TRIM]
-
     def direction_output(direction: str) -> List[str]:
         code = "GZ" if direction == "Z" else "GX"
         individual = []
 
-        for beam, node_a, node_b, prop, _material, _beta, _length in filtered_members:
+        for beam, node_a, node_b, prop, _material, _beta, _length in members:
             xa, ya, za = nodes[node_a]
             xb, yb, zb = nodes[node_b]
 
