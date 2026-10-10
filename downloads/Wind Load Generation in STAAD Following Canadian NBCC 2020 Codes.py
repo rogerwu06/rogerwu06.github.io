@@ -36,20 +36,20 @@ from typing import Callable, Iterable, List, Sequence
 
 
 APP_TITLE = "STAAD.Pro Wind Input Spreadsheet"
-PALE_YELLOW = "#FFFFFF"     # white fill for the basic format
-SECTION_GRAY = "#FFFFFF"
-TITLE_BLUE = "#000000"          # old variable name is kept here but it is just black now
-RED = "#000000"                 # old variable name is kept here but it is just black now
-GRID = "#000000"
+PALE_YELLOW = "#F5F5F5"     # white fill for the basic format
+SECTION_GRAY = "#F3F3F3"
+TITLE_BLUE = "#252525"          # old variable name is kept here but it is just black now
+RED = "#8A3B3B"                 # old variable name is kept here but it is just black now
+GRID = "#BFC5C9"
 WHITE = "#FFFFFF"
 LIGHT_INPUT = "#FFFFFF"
 LIGHT_OUTPUT = "#FFFFFF"
-TEXT = "#000000"
-MUTED_TEXT = "#000000"
-ACCENT = "#FFFFFF"
-ACCENT_DARK = "#FFFFFF"
+TEXT = "#252525"
+MUTED_TEXT = "#252525"
+ACCENT = "#5B7F93"
+ACCENT_DARK = "#456A7E"
 BUTTON_BG = "#FFFFFF"
-BUTTON_ACTIVE = "#FFFFFF"
+BUTTON_ACTIVE = "#F2F2F2"
 
 NODE_HEADERS = ("NODE", "X", "Y", "Z")
 MEMBER_HEADERS = ("BEAM", "NODEA", "NODE B", "PROPERTY DEFINE", "MATERIAL", "BETA", "LENGTH")
@@ -759,7 +759,7 @@ class WindLoadApp(tk.Tk):
         )
         style.map(
             "Excel.Treeview",
-            background=[("selected", "#000000")],
+            background=[("selected", "#5B7F93")],
             foreground=[("selected", "#FFFFFF")],
         )
 

@@ -42,20 +42,20 @@ APP_TITLE = "STAAD.Pro Seismic Input Spreadsheet"
 # basic black and white colors so seismic and wind gui have the same format
 BG = "#FFFFFF"
 CARD = "#FFFFFF"
-NAVY = "#000000"              # old variable name is kept here but it is just black now
-NAVY_2 = "#FFFFFF"
-ACCENT = "#FFFFFF"
-ACCENT_LIGHT = "#FFFFFF"
+NAVY = "#252525"              # old variable name is kept here but it is just black now
+NAVY_2 = "#F5F5F5"
+ACCENT = "#5B7F93"
+ACCENT_LIGHT = "#F5F5F5"
 INPUT_BG = "#FFFFFF"
 OUTPUT_BG = "#FFFFFF"
-GRID = "#000000"
-TEXT = "#000000"
-MUTED = "#000000"
-DANGER = "#000000"
-SUCCESS = "#000000"
+GRID = "#BFC5C9"
+TEXT = "#252525"
+MUTED = "#687078"
+DANGER = "#8A3B3B"
+SUCCESS = "#496B58"
 WHITE = "#FFFFFF"
 BUTTON_BG = "#FFFFFF"
-BUTTON_ACTIVE = "#FFFFFF"
+BUTTON_ACTIVE = "#F2F2F2"
 
 NODE_HEADERS = ("Node", "X (m)", "Y (m)", "Z (m)")
 REACTION_HEADERS = ("Node", "L/C", "Fx (kN)", "Fy (kN)", "Fz (kN)", "Mx (kN-m)", "My (kN-m)", "Mz (kN-m)")
@@ -1121,7 +1121,7 @@ class SeismicApp(tk.Tk):
         )
         style.map(
             "Data.Treeview",
-            background=[("selected", "#000000")],
+            background=[("selected", "#5B7F93")],
             foreground=[("selected", "#FFFFFF")],
         )
         style.configure(
@@ -1138,7 +1138,7 @@ class SeismicApp(tk.Tk):
         )
         style.map(
             "Main.TNotebook.Tab",
-            background=[("selected", "#000000")],
+            background=[("selected", "#5B7F93")],
             foreground=[("selected", "#FFFFFF")],
         )
 
