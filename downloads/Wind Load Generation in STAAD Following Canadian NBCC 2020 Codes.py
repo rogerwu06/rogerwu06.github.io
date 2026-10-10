@@ -1032,6 +1032,116 @@ class WindLoadApp(tk.Tk):
             self.status_text.set(str(exc))
 
 
+
+class SiteStyleWindApp(tk.Tk):
+    def __init__(self, *, smoke_test: bool = False):
+        super().__init__()
+        self.title("Wind Load Generation in STAAD Following Canadian NBCC 2020 Codes")
+        self.geometry("1450x860")
+        self.minsize(1120, 680)
+        self.configure(bg=WHITE)
+        self.font_name = _first_font(self)
+        self.height_adjustment = tk.StringVar(value="")
+        self.q_value = tk.StringVar(value="")
+        self.cg_value = tk.StringVar(value="")
+        self.max_height_text = tk.StringVar(value="—")
+        self.status_text = tk.StringVar(value="Enter the wind inputs and paste the STAAD tables.")
+        self._configure_styles()
+        self._build()
+        if smoke_test:
+            self.after(300, self.destroy)
+
+    def _configure_styles(self):
+        style = ttk.Style(self)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure("Excel.Treeview", background=WHITE, fieldbackground=WHITE, foreground=TEXT,
+                        bordercolor=GRID, lightcolor=WHITE, darkcolor=WHITE, rowheight=22,
+                        font=(self.font_name, 9))
+        style.configure("Excel.Treeview.Heading", background=SECTION_GRAY, foreground=TEXT,
+                        bordercolor=GRID, lightcolor=WHITE, darkcolor=WHITE, relief="flat",
+                        font=(self.font_name, 8, "bold"), padding=(4, 3))
+        style.map("Excel.Treeview", background=[("selected", ACCENT)], foreground=[("selected", WHITE)])
+
+    def _button(self, parent, text, command):
+        return tk.Button(parent, text=text, command=command, font=(self.font_name, 9),
+                         bg=BUTTON_BG, fg=TEXT, activebackground=BUTTON_ACTIVE,
+                         activeforeground=TEXT, relief="solid", bd=1,
+                         highlightthickness=0, padx=9, pady=4)
+
+    def _build(self):
+        page = ScrollablePage(self)
+        page.pack(fill="both", expand=True)
+        wrap = tk.Frame(page.inner, bg=WHITE)
+        wrap.pack(fill="both", expand=True, padx=16, pady=14)
+        top = tk.Frame(wrap, bg=WHITE)
+        top.pack(fill="x", pady=(0, 12))
+        params = tk.Frame(top, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
+        params.pack(side="left")
+        for col, (label, var) in enumerate((("Height adj. (m)", self.height_adjustment),
+                                            ("q (kPa)", self.q_value), ("Cg", self.cg_value))):
+            box = tk.Frame(params, bg=WHITE)
+            box.grid(row=0, column=col, sticky="nsew")
+            tk.Label(box, text=label, bg=SECTION_GRAY, fg=TEXT, font=(self.font_name, 8, "bold"),
+                     relief="solid", bd=1, pady=3).pack(fill="x")
+            tk.Entry(box, textvariable=var, bg=LIGHT_INPUT, fg=TEXT, justify="center",
+                     font=(self.font_name, 9), relief="solid", bd=1).pack(fill="x")
+            params.grid_columnconfigure(col, weight=1)
+        self._button(top, "Calculate", self.calculate).pack(side="right")
+
+        tables = tk.Frame(wrap, bg=WHITE)
+        tables.pack(fill="x", pady=(0, 10))
+        self.node_table = EditableTree(tables, "NODES", NODE_HEADERS,
+                                       (48, 55, 55, 55), 13, lambda: None, self.font_name)
+        self.member_table = EditableTree(tables, "MEMBERS", MEMBER_HEADERS,
+                                         (50, 50, 50, 78, 90, 48, 60), 13, lambda: None, self.font_name)
+        self.section_table = EditableTree(tables, "SECTION PROPERTIES", SECTION_HEADERS,
+                                          (42, 66, 50, 42, 42, 42, 46, 55, 55, 55), 13, lambda: None, self.font_name)
+        self.node_table.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
+        self.member_table.grid(row=0, column=1, sticky="nsew", padx=(0, 8))
+        self.section_table.grid(row=0, column=2, sticky="nsew")
+        tables.grid_columnconfigure(0, weight=1)
+        tables.grid_columnconfigure(1, weight=2)
+        tables.grid_columnconfigure(2, weight=2)
+
+        tk.Label(wrap, textvariable=self.status_text, bg=WHITE, fg=MUTED_TEXT,
+                 font=(self.font_name, 9), anchor="w").pack(fill="x", pady=(0, 8))
+        metric = tk.Frame(wrap, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
+        metric.pack(anchor="w", pady=(0, 10))
+        tk.Label(metric, text="Maximum height", bg=WHITE, fg=MUTED_TEXT,
+                 font=(self.font_name, 8), padx=7, pady=3).pack(anchor="w")
+        tk.Label(metric, textvariable=self.max_height_text, bg=WHITE, fg=TEXT,
+                 font=(self.font_name, 9, "bold"), padx=7, pady=3).pack(anchor="w")
+
+        outputs = tk.Frame(wrap, bg=WHITE)
+        outputs.pack(fill="x")
+        self.gz_output = OutputPanel(outputs, "Z Direction — STAAD GZ", self.font_name)
+        self.gx_output = OutputPanel(outputs, "X Direction — STAAD GX", self.font_name)
+        self.gz_output.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        self.gx_output.grid(row=0, column=1, sticky="nsew")
+        outputs.grid_columnconfigure(0, weight=1)
+        outputs.grid_columnconfigure(1, weight=1)
+
+    def calculate(self):
+        try:
+            h = _as_number(self.height_adjustment.get(), field="Height adjustment")
+            q = _as_number(self.q_value.get(), field="q")
+            cg = _as_number(self.cg_value.get(), field="Cg")
+            max_height, gz, gx = calculate_wind_outputs(
+                self.node_table.get_rows(), self.member_table.get_rows(), self.section_table.get_rows(), h, q, cg)
+            self.max_height_text.set(f"{max_height:.3f} m")
+            self.gz_output.set_lines(gz)
+            self.gx_output.set_lines(gx)
+            self.status_text.set(f"Calculation complete · {len(gz)} Z-direction groups · {len(gx)} X-direction groups.")
+        except Exception as exc:
+            self.max_height_text.set("—")
+            self.gz_output.set_error(str(exc))
+            self.gx_output.set_error(str(exc))
+            self.status_text.set(str(exc))
+
+
 # self test compares the important output values with the expected workbook result, run this after changing the calc or table code to make sure the result did not change
 # #
 
@@ -1044,11 +1154,11 @@ def main():
     if "--self-test" in sys.argv:
         raise SystemExit(self_test())
     if "--smoke-test" in sys.argv:
-        app = WindLoadApp(smoke_test=True)
+        app = SiteStyleWindApp(smoke_test=True)
         app.mainloop()
         print("PASS: GUI smoke test")
         return
-    app = WindLoadApp()
+    app = SiteStyleWindApp()
     app.mainloop()
 
 

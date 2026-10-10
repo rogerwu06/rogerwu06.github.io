@@ -1240,6 +1240,142 @@ class SeismicApp(tk.Tk):
         text.configure(state="disabled")
 
 
+
+class SiteStyleSeismicApp(tk.Tk):
+    def __init__(self, *, smoke_test: bool = False):
+        super().__init__()
+        self.title("Seismic Load Generation in STAAD Following Canadian NBCC 2020 Codes")
+        self.geometry("1380x860")
+        self.minsize(1050, 680)
+        self.configure(bg=WHITE)
+        self.font_name = _first_font(self)
+        self.with_pad = False
+        self.inputs = {key: tk.StringVar(value="") for key in ("sa02", "ie", "rd", "ro", "height")}
+        self.summary = {key: tk.StringVar(value="—") for key in (
+            "coefficient", "total_vertical", "excluded_weight", "effective_weight", "vmax", "count"
+        )}
+        self.status = tk.StringVar(value="Enter the design inputs and paste the STAAD tables.")
+        self._configure_styles()
+        self._build()
+        if smoke_test:
+            self.after(300, self.destroy)
+
+    def _configure_styles(self):
+        style = ttk.Style(self)
+        try:
+            style.theme_use("clam")
+        except tk.TclError:
+            pass
+        style.configure("Data.Treeview", background=WHITE, fieldbackground=WHITE, foreground=TEXT,
+                        bordercolor=GRID, lightcolor=WHITE, darkcolor=WHITE, rowheight=22,
+                        font=(self.font_name, 9))
+        style.configure("Data.Treeview.Heading", background=ACCENT_LIGHT, foreground=TEXT,
+                        bordercolor=GRID, lightcolor=WHITE, darkcolor=WHITE, relief="flat",
+                        font=(self.font_name, 8, "bold"), padding=(4, 3))
+        style.map("Data.Treeview", background=[("selected", ACCENT)], foreground=[("selected", WHITE)])
+
+    def _button(self, parent, text, command, *, active=False):
+        return tk.Button(parent, text=text, command=command, font=(self.font_name, 9),
+                         bg="#E9E9E9" if active else BUTTON_BG, fg=TEXT,
+                         activebackground=BUTTON_ACTIVE, activeforeground=TEXT,
+                         relief="solid", bd=1, highlightthickness=0, padx=9, pady=4)
+
+    def _build(self):
+        page = ScrollablePage(self)
+        page.pack(fill="both", expand=True)
+        wrap = tk.Frame(page.inner, bg=WHITE)
+        wrap.pack(fill="both", expand=True, padx=16, pady=14)
+
+        toolbar = tk.Frame(wrap, bg=WHITE)
+        toolbar.pack(fill="x", pady=(0, 10))
+        self.no_pad_btn = self._button(toolbar, "NO PAD", lambda: self._set_mode(False), active=True)
+        self.no_pad_btn.pack(side="left")
+        self.pad_btn = self._button(toolbar, "WITH PAD", lambda: self._set_mode(True))
+        self.pad_btn.pack(side="left", padx=(5, 0))
+        self._button(toolbar, "Calculate", self.calculate).pack(side="right")
+
+        params = tk.Frame(wrap, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
+        params.pack(fill="x", pady=(0, 12))
+        for col, (label, key) in enumerate((("Sa(0.2)", "sa02"), ("IE", "ie"), ("Rd", "rd"),
+                                            ("Ro", "ro"), ("Height adj. (m)", "height"))):
+            box = tk.Frame(params, bg=WHITE)
+            box.grid(row=0, column=col, sticky="nsew")
+            tk.Label(box, text=label, bg=ACCENT_LIGHT, fg=TEXT, font=(self.font_name, 8, "bold"),
+                     relief="solid", bd=1, pady=3).pack(fill="x")
+            tk.Entry(box, textvariable=self.inputs[key], bg=INPUT_BG, fg=TEXT, justify="center",
+                     font=(self.font_name, 9), relief="solid", bd=1).pack(fill="x")
+            params.grid_columnconfigure(col, weight=1)
+
+        tables = tk.Frame(wrap, bg=WHITE)
+        tables.pack(fill="x", pady=(0, 10))
+        self.node_table = EditableTree(tables, "NODE GEOMETRY", NODE_HEADERS,
+                                       (75, 90, 90, 90), 13, lambda: None, self.font_name)
+        self.reaction_table = EditableTree(tables, "REACTIONS", REACTION_HEADERS,
+                                           (70, 100, 72, 72, 72, 78, 78, 78), 13, lambda: None, self.font_name)
+        self.node_table.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        self.reaction_table.grid(row=0, column=1, sticky="nsew")
+        tables.grid_columnconfigure(0, weight=1)
+        tables.grid_columnconfigure(1, weight=2)
+
+        tk.Label(wrap, textvariable=self.status, bg=WHITE, fg=MUTED,
+                 font=(self.font_name, 9), anchor="w").pack(fill="x", pady=(0, 8))
+
+        metrics = tk.Frame(wrap, bg=WHITE)
+        metrics.pack(fill="x", pady=(0, 10))
+        defs = [("Coefficient", "coefficient"), ("Total vertical", "total_vertical"),
+                ("Excluded weight", "excluded_weight"), ("Effective weight", "effective_weight"),
+                ("Vmax", "vmax"), ("Matched nodes", "count")]
+        for col, (label, key) in enumerate(defs):
+            card = tk.Frame(metrics, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
+            card.grid(row=0, column=col, sticky="nsew", padx=(0, 6 if col < len(defs)-1 else 0))
+            tk.Label(card, text=label, bg=WHITE, fg=MUTED, font=(self.font_name, 8),
+                     anchor="w", padx=7, pady=3).pack(fill="x")
+            tk.Label(card, textvariable=self.summary[key], bg=WHITE, fg=TEXT,
+                     font=(self.font_name, 9, "bold"), anchor="w", padx=7, pady=3).pack(fill="x")
+            metrics.grid_columnconfigure(col, weight=1)
+
+        outputs = tk.Frame(wrap, bg=WHITE)
+        outputs.pack(fill="x")
+        self.fz_output = OutputPanel(outputs, "Z Direction — STAAD JOINT LOAD (FZ)", self.font_name)
+        self.fx_output = OutputPanel(outputs, "X Direction — STAAD JOINT LOAD (FX)", self.font_name)
+        self.fz_output.grid(row=0, column=0, sticky="nsew", padx=(0, 10))
+        self.fx_output.grid(row=0, column=1, sticky="nsew")
+        outputs.grid_columnconfigure(0, weight=1)
+        outputs.grid_columnconfigure(1, weight=1)
+
+    def _set_mode(self, with_pad: bool):
+        self.with_pad = with_pad
+        self.no_pad_btn.configure(bg=BUTTON_BG if with_pad else "#E9E9E9")
+        self.pad_btn.configure(bg="#E9E9E9" if with_pad else BUTTON_BG)
+        self.status.set("Mode: WITH PAD" if with_pad else "Mode: NO PAD")
+
+    def calculate(self):
+        try:
+            result = calculate_seismic(
+                self.node_table.get_rows(), self.reaction_table.get_rows(),
+                sa02=_as_number(self.inputs["sa02"].get(), field="Sa(0.2)"),
+                ie=_as_number(self.inputs["ie"].get(), field="IE"),
+                rd=_as_number(self.inputs["rd"].get(), field="Rd"),
+                ro=_as_number(self.inputs["ro"].get(), field="Ro"),
+                height_adjustment=_as_number(self.inputs["height"].get(), field="Height adjustment"),
+                with_pad=self.with_pad,
+            )
+            self.summary["coefficient"].set(f'{result["coefficient"]:.9f}')
+            self.summary["total_vertical"].set(f'{result["total_vertical"]:.3f} kN')
+            self.summary["excluded_weight"].set(f'{result["excluded_weight"]:.3f} kN')
+            self.summary["effective_weight"].set(f'{result["effective_weight"]:.3f} kN')
+            self.summary["vmax"].set(f'{result["vmax"]:.3f} kN')
+            self.summary["count"].set(str(result["count"]))
+            self.fz_output.set_lines(result["fz_lines"])
+            self.fx_output.set_lines(result["fx_lines"])
+            self.status.set(f'Calculation complete · {result["count"]} matched reaction nodes.')
+        except Exception as exc:
+            for value in self.summary.values(): value.set("—")
+            self.fz_output.set_error(str(exc))
+            self.fx_output.set_error(str(exc))
+            self.status.set(str(exc))
+
+
 # basic self test for the seismic calculation, this should be run after any code changes to check that the expected result is still the same
 # # #
 
@@ -1251,7 +1387,7 @@ def self_test() -> int:
 def main() -> int:
     if "--self-test" in sys.argv:
         return self_test()
-    app = SeismicApp(smoke_test="--smoke-test" in sys.argv)
+    app = SiteStyleSeismicApp(smoke_test="--smoke-test" in sys.argv)
     app.mainloop()
     return 0
 
