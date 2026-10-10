@@ -29,20 +29,20 @@ from decimal import Decimal, ROUND_HALF_UP
 from tkinter import messagebox, ttk
 from typing import Callable, Iterable, List, Sequence
 
-##
-# get the inputs
+####
+# this part
 #
-# #
-# inputs here
 ##
+# input stuff
+# #
 
 
 APP_TITLE = "STAAD.Pro Seismic Input Spreadsheet"
 
-# staad output
+# keep this
 BG = "#FFFFFF"
 CARD = "#FFFFFF"
-NAVY = "#252525"              # old variable name is kept here but it is just black now
+NAVY = "#252525"              # main part
 NAVY_2 = "#F5F5F5"
 ACCENT = "#5B7F93"
 ACCENT_LIGHT = "#F5F5F5"
@@ -81,8 +81,8 @@ SAMPLE_REACTIONS_NO_PAD = []
 SAMPLE_REACTIONS_PAD = []
 
 
-#
-# window stuff
+####
+# this part
 #
 
 def _first_font(root: tk.Misc) -> str:
@@ -93,7 +93,7 @@ def _first_font(root: tk.Misc) -> str:
     return "TkDefaultFont"
 
 
-# input values
+# calc part
 ####
 
 def _as_number(value: object, *, field: str = "", integer: bool = False) -> float | int:
@@ -114,12 +114,12 @@ def _as_number(value: object, *, field: str = "", integer: bool = False) -> floa
     return num
 
 
-# inputs here
-# #
 #
+#
+##
 
-#
-# main part
+####
+# this part
 #
 def _excel_round_3(value: float) -> str:
     """Excel-like ROUND(value,3), rendered the way text concatenation normally appears."""
@@ -131,8 +131,8 @@ def _excel_round_3(value: float) -> str:
 
 
 ##
-# inputs here
-#
+# input stuff
+# #
 
 def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     rows: List[List[str]] = []
@@ -145,21 +145,21 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
         elif "," in raw_line:
             parts = [p.strip().strip('"') for p in raw_line.split(",")]
         else:
-            # data table
+            # keep this
             parts = re.split(r"\s+", raw_line.strip())
 
         try:
             float(parts[0])
         except (ValueError, IndexError):
-            # table stuff
+            # main part
             continue
 
         if len(parts) < expected_cols:
             parts.extend([""] * (expected_cols - len(parts)))
         elif len(parts) > expected_cols:
-            # inputs here
+            # needed here
             if expected_cols == 8 and len(parts) >= 9:
-                # get the inputs
+                # this part
                 parts = [parts[0], " ".join(parts[1:-6]), *parts[-6:]]
             else:
                 parts = parts[:expected_cols]
@@ -170,8 +170,8 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     return rows
 
 
-# data table
-# #
+# leave this
+##
 
 def _normalize_nodes(rows: Sequence[Sequence[object]]) -> dict[int, tuple[float, float, float]]:
     nodes: dict[int, tuple[float, float, float]] = {}
@@ -192,13 +192,13 @@ def _normalize_nodes(rows: Sequence[Sequence[object]]) -> dict[int, tuple[float,
     return nodes
 
 
-# inputs here
-##
-####
+# input stuff
+# #
+#
 
-####
-# this part
-####
+##
+#
+# #
 def _normalize_reactions(rows: Sequence[Sequence[object]]) -> list[tuple[int, str, float, float, float, float, float, float]]:
     out = []
     seen: set[int] = set()
@@ -228,8 +228,8 @@ def _normalize_reactions(rows: Sequence[Sequence[object]]) -> list[tuple[int, st
     return out
 
 
-# input stuff
-# #
+# leave this
+##
 
 def _wrap_staads(items: Sequence[str], max_len: int = 79) -> list[str]:
     """Match the workbook's intended semicolon grouping, but include every node."""
@@ -248,12 +248,12 @@ def _wrap_staads(items: Sequence[str], max_len: int = 79) -> list[str]:
     return lines
 
 
-#
-# input values
 ####
+# output stuff
 #
-# table part
+##
 #
+# #
 
 def calculate_seismic(
     node_rows: Sequence[Sequence[object]],
@@ -307,7 +307,7 @@ def calculate_seismic(
             "mz": mz,
         })
 
-    # output stuff
+    # leave this
     joined.sort(key=lambda r: (r["hi"], r["order"]))
 
     total_vertical = sum(r["fy"] for r in joined)
@@ -356,13 +356,13 @@ def calculate_seismic(
     }
 
 
-####
-# get the inputs
+##
+# input stuff
 # #
 
 #
 # main part
-#
+####
 class EditableTree(tk.Frame):
     def __init__(
         self,
@@ -591,8 +591,8 @@ class EditableTree(tk.Frame):
         editor.bind("<Escape>", cancel)
 
 
-# output stuff
-##
+# this part
+#
 
 class OutputPanel(tk.Frame):
     def __init__(self, master, title: str, font_name: str):
@@ -676,8 +676,8 @@ class OutputPanel(tk.Frame):
         self.clipboard_append(value)
 
 
-####
-# keep this here
+##
+# input stuff
 # #
 
 class ScrollablePage(tk.Frame):
@@ -705,8 +705,8 @@ class ScrollablePage(tk.Frame):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def _fit_width(self, event):
-        # window stuff
-        # table part
+        # keep this
+        # main part
         req = self.inner.winfo_reqwidth()
         self.canvas.itemconfigure(self.window_id, width=max(event.width, req))
 
@@ -731,13 +731,13 @@ class ScrollablePage(tk.Frame):
         return False
 
 
-# input values
+# needed here
+# #
+#
+
+##
 #
 # #
-
-####
-# this part
-####
 class ModePage:
     def __init__(self, app: "SeismicApp", parent: tk.Frame, *, with_pad: bool):
         self.app = app
@@ -795,7 +795,7 @@ class ModePage:
             pady=4,
         ).pack(side="right")
 
-        # get the inputs
+        # keep this
         inst = tk.Frame(p, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
         inst.pack(fill="x", padx=18, pady=(0, 10))
         tk.Label(
@@ -830,7 +830,7 @@ class ModePage:
         body = tk.Frame(p, bg=WHITE)
         body.pack(fill="both", expand=True, padx=18, pady=(0, 18))
 
-        # input values
+        # main part
         top = tk.Frame(body, bg=WHITE)
         top.pack(fill="x", pady=(0, 10))
 
@@ -876,8 +876,8 @@ class ModePage:
             entry.grid(row=row, column=col+1, sticky="ew", padx=(0, 8), pady=2)
             entry.bind("<KeyRelease>", lambda _e: self.app.schedule_all())
 
-        # input stuff
-        # inputs here
+        # needed here
+        # this part
         seismic.grid_columnconfigure(1, weight=1)
         seismic.grid_columnconfigure(3, weight=1)
 
@@ -938,7 +938,7 @@ class ModePage:
             pady=7,
         ).grid(row=8, column=0, columnspan=4, sticky="ew")
 
-        # get the inputs
+        # leave this
         tables = tk.Frame(body, bg=WHITE)
         tables.pack(fill="x", pady=(0, 10))
 
@@ -1008,9 +1008,9 @@ class ModePage:
                 pass
         self._job = self.app.after(220, self.recalculate)
 
-    #
+    ##
     # input stuff
-    ####
+    # #
     def recalculate(self):
         self._job = None
         try:
@@ -1047,9 +1047,9 @@ class ModePage:
 
 
 #
-# staad output
-#
-##
+# main part
+####
+# #
 class SeismicApp(tk.Tk):
     def __init__(self, *, smoke_test: bool = False):
         super().__init__()
@@ -1080,9 +1080,9 @@ class SeismicApp(tk.Tk):
         if smoke_test:
             self.after(300, self.destroy)
 
+    #
+    # calc part
     ####
-    # staad output
-    # #
     def _configure_styles(self):
         style = ttk.Style(self)
         try:
@@ -1090,8 +1090,8 @@ class SeismicApp(tk.Tk):
         except tk.TclError:
             pass
 
-        # window stuff
-        ##
+        # output stuff
+        #
         for scrollbar_style in ("Vertical.TScrollbar", "Horizontal.TScrollbar"):
             style.configure(
                 scrollbar_style,
@@ -1172,8 +1172,8 @@ class SeismicApp(tk.Tk):
                 pass
         self._all_job = self.after(220, self.recalculate_all)
 
-    ####
-    # input stuff
+    ##
+    # needed here
     # #
     def recalculate_all(self):
         self._all_job = None
@@ -1388,11 +1388,11 @@ class SiteStyleSeismicApp(tk.Tk):
             self.status.set(str(exc))
 
 
-# do the calc
+# leave this
 ##
 
+####
 #
-# main part
 #
 def self_test() -> int:
     print("No embedded project dataset is included in this public version.")

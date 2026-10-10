@@ -57,8 +57,8 @@ def _distance3(a, b):
     )
 
 
-#
-# main part
+####
+# this part
 #
 def _dot(a, b):
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
@@ -75,9 +75,9 @@ def _unit(v):
     return (v[0]/n, v[1]/n, v[2]/n)
 
 
-####
-# this part
-####
+##
+#
+# #
 def _bbox_dims(bb):
     low = bb['low']
     high = bb['high']
@@ -105,7 +105,7 @@ def _bbox_diag(bb):
 
 #
 # main part
-#
+####
 def _merge_bboxes(boxes):
     if not boxes:
         return {'low': (0.0, 0.0, 0.0), 'high': (1.0, 1.0, 1.0)}
@@ -139,9 +139,9 @@ def _shape_axis_ratios(bb):
     return (d[0]/m, d[1]/m, d[2]/m)
 
 
-####
-# this part
-####
+# #
+#
+##
 def _part_match_descriptor(bb, global_bb):
     return {
         'bbox': bb,
@@ -151,12 +151,12 @@ def _part_match_descriptor(bb, global_bb):
 
 
 def _part_match_score(a, b):
-    # window stuff
-    # main part
+    # input stuff
+    #
     axis_score = _distance3(a['axis_ratio'], b['axis_ratio'])
 
-    # stuff below
-    # needed here
+    # keep this
+    # main part
     center_score = _distance3(a['relative_center'], b['relative_center'])
 
     return 3.0*axis_score + 2.0*center_score
@@ -198,8 +198,8 @@ def _resolve_shortcut(shortcut_path):
     return info
 
 
-#
-# main part
+####
+# this part
 #
 def _extract_command_files(text):
     out = []
@@ -242,7 +242,7 @@ def _find_abaqus_command(selected_path):
         candidates.extend(_extract_command_files(target))
         candidates.extend(_extract_command_files(args))
 
-        # leave this like this
+        # calc part
         roots = []
         for seed in (target, workdir):
             if not seed:
@@ -278,7 +278,7 @@ def _find_abaqus_command(selected_path):
     else:
         candidates.append(p)
 
-    # this part
+    #
     drive = os.environ.get('SystemDrive', 'C:')
     candidates.extend([
         os.path.join(drive + os.sep, 'SIMULIA', 'Commands', 'abq2023.bat'),
@@ -317,9 +317,9 @@ def _timestamped_backup(cae_path):
     return backup
 
 
-####
-# this part
-####
+# #
+# keep this
+##
 def _cae_lock_candidates(cae_path):
     base, _ = os.path.splitext(cae_path)
     return [cae_path + '.lck', base + '.lck']
@@ -569,8 +569,8 @@ def _normal_python_gui():
             return
         cae, step, command_file = settings
 
-        # model stuff
-        # main part
+        # needed here
+        # this part
         holder['settings'] = settings
         holder['backup'] = ''
         holder['phase'] = 'probe_then_full'
@@ -605,8 +605,8 @@ def _normal_python_gui():
                     phase = holder.get('phase', '')
                     settings = holder.get('settings')
 
-                    # stuff below
-                    # needed here
+                    # leave this
+                    # calc part
                     if phase == 'probe_then_full':
                         if value == 0 and settings:
                             cae, step, command_file = settings
@@ -642,7 +642,7 @@ def _normal_python_gui():
                             _show_failure_details(value)
                         continue
 
-                    # results here
+                    # input stuff
                     set_buttons(False)
                     if value == 0:
                         status_var.set('Transfer finished successfully.')
@@ -701,9 +701,9 @@ def _normal_python_gui():
     root.mainloop()
     return 0
 
-#
-# main part
-#
+# #
+# keep this
+##
 def _abaqus_worker(template_cae, step_file):
     from abaqus import mdb, openMdb
     from abaqusConstants import (
@@ -716,9 +716,9 @@ def _abaqus_worker(template_cae, step_file):
     report_lines = []
     warnings = []
 
-    # mesh stuff
-    # abaqus part
-    # main part
+    #
+    # this part
+    #
     descriptor_cache = {}
 
     def log(text=''):
@@ -747,7 +747,7 @@ def _abaqus_worker(template_cae, step_file):
             return []
 
     def instance_bbox(inst):
-        # geometry stuff
+        # calc part
         try:
             if len(inst.faces) > 0:
                 return inst.faces.getBoundingBox()
@@ -884,7 +884,7 @@ def _abaqus_worker(template_cae, step_file):
         }
 
     def entity_score(old_d, new_d, old_bb, new_bb, is_face=False):
-        # needed here
+        # input stuff
         s = 4.0 * _distance3(
             old_d['normalized_point'],
             new_d['normalized_point']
@@ -911,7 +911,7 @@ def _abaqus_worker(template_cae, step_file):
             n1 = old_d.get('normal', (0.0, 0.0, 0.0))
             n2 = new_d.get('normal', (0.0, 0.0, 0.0))
             if _norm(n1) > 0.5 and _norm(n2) > 0.5:
-                # leave this like this
+                # output stuff
                 s += 2.0 * (1.0 - abs(_dot(n1, n2)))
 
             e1 = int(old_d.get('edge_count', 0))
@@ -929,11 +929,11 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # table part
+        # keep this
         if inst_name:
             return (kind, inst_name, len(seq))
 
-        # keep this here
+        # main part
         try:
             c = _bbox_center(owner_bb)
             d = _bbox_dims(owner_bb)
@@ -1054,8 +1054,8 @@ def _abaqus_worker(template_cae, step_file):
             'items': []
         }
 
-        # abaqus stuff
-        # stuff below
+        # needed here
+        # this part
         try:
             if len(set_obj.faces) > 0:
                 data['type'] = 'faces'
@@ -1116,8 +1116,8 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # mesh here
-        # geometry stuff
+        #
+        # calc part
         return data
 
     def capture_surface(surface_obj, bbox_lookup, default_bbox):
@@ -1126,7 +1126,7 @@ def _abaqus_worker(template_cae, step_file):
             'sidedness_known': False
         }
 
-        # abaqus stuff
+        # input stuff
         for side_name in ('side1Faces', 'side2Faces', 'side12Faces'):
             try:
                 seq = getattr(surface_obj, side_name)
@@ -1147,9 +1147,9 @@ def _abaqus_worker(template_cae, step_file):
                 pass
 
         if not data['sides']:
-            # keep this here
+            # output stuff
+            # keep this
             # main part
-            # stuff below
             try:
                 vals = []
                 for x in surface_obj.faces:
@@ -1181,7 +1181,7 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # leave this like this
+        # this part
         try:
             for name in repo_keys(owner.allInternalSets):
                 if name not in sets:
@@ -1196,7 +1196,7 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # this part
+        #
         try:
             for name in repo_keys(owner.surfaces):
                 try:
@@ -1210,7 +1210,7 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # keep this here
+        # calc part
         try:
             for name in repo_keys(owner.allInternalSurfaces):
                 if name not in surfaces:
@@ -1352,9 +1352,9 @@ def _abaqus_worker(template_cae, step_file):
             if mapped:
                 actual_side = side_name
 
-                # abaqus stuff
-                # stuff below
-                # needed here
+                # input stuff
+                #
+                # keep this
                 if captured.get('sidedness_known') and side_dots:
                     avg_dot = sum(side_dots) / float(len(side_dots))
                     if avg_dot < -0.5:
@@ -1379,9 +1379,9 @@ def _abaqus_worker(template_cae, step_file):
         if old_instance_name in instance_names:
             return old_instance_name
 
-        # model stuff
-        # mesh stuff
-        # keep this here
+        # main part
+        #
+        # this part
         if (not old_instance_name) and len(instance_names) == 1:
             return instance_names[0]
 
@@ -1450,9 +1450,9 @@ def _abaqus_worker(template_cae, step_file):
             return True, max(scores) if scores else 0.0, len(mapped)
 
         except Exception as e:
-            # abaqus run
-            # stuff below
-            # needed here
+            # leave this
+            # calc part
+            # input stuff
             warn('Could not recreate assembly set "%s": %s' % (name, e))
             return False, max(scores) if scores else 0.0, len(mapped)
 
@@ -1583,7 +1583,7 @@ def _abaqus_worker(template_cae, step_file):
 
         applied = 0
 
-        # leave this like this
+        # output stuff
         for x in assignments:
             rn = x.get('region_name')
             sn = x.get('section_name')
@@ -1600,10 +1600,10 @@ def _abaqus_worker(template_cae, step_file):
                         % (sn, rn, old_part_name, e)
                     )
 
+        # keep this
+        # main part
+        #
         # this part
-        # geometry stuff
-        # mesh stuff
-        # meshing part
         if applied == 0 and len(unique_sections) == 1:
             try:
                 whole_name = '__AUTO_WHOLE_PART_SECTION_REGION__'
@@ -1633,9 +1633,9 @@ def _abaqus_worker(template_cae, step_file):
                 % old_part_name
             )
 
-    ##
-    # leave this like this
     #
+    # calc part
+    ####
 
     template_cae = os.path.abspath(template_cae)
     step_file = os.path.abspath(step_file)
@@ -1661,8 +1661,8 @@ def _abaqus_worker(template_cae, step_file):
     log('Opening template CAE...')
     openMdb(pathName=template_cae)
 
-    # keep this here
-    # main part
+    # output stuff
+    # keep this
     model_names = repo_keys(mdb.models)
     if not model_names:
         raise Exception('No models were found in the template CAE.')
@@ -1720,7 +1720,7 @@ def _abaqus_worker(template_cae, step_file):
 
     old_global_bb = _merge_bboxes(list(old_instance_bboxes.values()))
 
-    # geometry stuff
+    # main part
     old_part_to_instances = {}
     for inst_name in old_instance_names:
         inst = assembly.instances[inst_name]
@@ -1752,11 +1752,11 @@ def _abaqus_worker(template_cae, step_file):
         log('  %s -> instance(s): %s' % (pn, ', '.join(old_part_to_instances[pn])))
     log('')
 
+    # #
     #
-    # this part
-    # keep this here
-    # main part
-    ####
+    # calc part
+    #
+    # #
 
     attribute_regions = []
     required_region_names = set()
@@ -1793,7 +1793,7 @@ def _abaqus_worker(template_cae, step_file):
             required_region_names.add(name)
         return name
 
-    # do the calc
+    # keep this
     try:
         for name in repo_keys(model.boundaryConditions):
             obj = model.boundaryConditions[name]
@@ -1824,9 +1824,9 @@ def _abaqus_worker(template_cae, step_file):
     except Exception:
         pass
 
-    # leave this like this
-    # output stuff
-    # main calc
+    # main part
+    # needed here
+    # this part
     region_attrs = (
         'region', 'surface', 'master', 'slave', 'main', 'secondary',
         'controlPoint', 'bodyRegion', 'tieRegion', 'region1', 'region2'
@@ -1855,9 +1855,9 @@ def _abaqus_worker(template_cae, step_file):
         log('  ' + ', '.join(sorted(required_region_names)))
     log('')
 
+    #
+    # calc part
     ####
-    # geometry stuff
-    # #
 
     old_part_capture = {}
 
@@ -1867,9 +1867,9 @@ def _abaqus_worker(template_cae, step_file):
         rep_inst = assembly.instances[rep_inst_name]
         rep_bb = old_instance_bboxes[rep_inst_name]
 
-        # meshing part
-        # this part
-        # geometry stuff
+        # output stuff
+        # keep this
+        # main part
         p_sets = {}
         p_surfaces = {}
         section_assignments = capture_section_assignments(part)
@@ -1878,8 +1878,8 @@ def _abaqus_worker(template_cae, step_file):
         )
         needed_part_internal = set(required_region_names) | section_region_names
 
-        # main part
-        # meshing part
+        #
+        # this part
         try:
             for name in repo_keys(rep_inst.sets):
                 try:
@@ -1906,14 +1906,14 @@ def _abaqus_worker(template_cae, step_file):
         except Exception:
             pass
 
-        # mesh here
+        #
         try:
             for name in repo_keys(part.allInternalSets):
                 if name not in p_sets and name in needed_part_internal:
                     try:
-                        # geometry stuff
-                        # this part
-                        # keep this here
+                        # calc part
+                        #
+                        # output stuff
                         p_sets[name] = capture_set(
                             part.allInternalSets[name],
                             {},
@@ -1946,8 +1946,8 @@ def _abaqus_worker(template_cae, step_file):
             'section_assignments': section_assignments
         }
 
+    # keep this
     # main part
-    # stuff below
     root_sets = {}
     root_surfaces = {}
 
@@ -2002,7 +2002,7 @@ def _abaqus_worker(template_cae, step_file):
     log('  Surfaces: %d' % len(root_surfaces))
     log('')
 
-    # calc part
+    #
     log('Template boundary conditions / loads:')
     for x in attribute_regions:
         log(
@@ -2011,9 +2011,9 @@ def _abaqus_worker(template_cae, step_file):
         )
     log('')
 
-    ####
-    # mesh here
     # #
+    #
+    ##
 
     log('Opening STEP geometry...')
     geometry_file = mdb.openStep(fileName=step_file, scale=1.0)
@@ -2035,7 +2035,7 @@ def _abaqus_worker(template_cae, step_file):
     for body_num in range(1, number_of_bodies + 1):
         part_name = '__AUTO_STEP_BODY_%03d__' % body_num
 
-        # main part
+        #
         if part_name in repo_keys(model.parts):
             try:
                 del model.parts[part_name]
@@ -2078,9 +2078,9 @@ def _abaqus_worker(template_cae, step_file):
 
     new_global_bb = _merge_bboxes(list(new_body_bboxes.values()))
 
+    # #
+    # keep this
     ##
-    # mesh here
-    #
 
     old_desc = {}
     for pn in old_part_names:
@@ -2096,9 +2096,9 @@ def _abaqus_worker(template_cae, step_file):
             new_global_bb
         )
 
+    #
     # this part
-    # keep this here
-    # main part
+    #
     pairs = []
     for old_pn in old_part_names:
         for new_pn in imported_parts:
@@ -2167,9 +2167,9 @@ def _abaqus_worker(template_cae, step_file):
 
     log('')
 
-    ####
-    # mesh stuff
-    # leave this like this
+    ##
+    #
+    # output stuff
     #
 
     temp_by_part = dict(zip(imported_parts, temp_instance_names))
@@ -2245,8 +2245,8 @@ def _abaqus_worker(template_cae, step_file):
         log('')
 
     ##
-    # mesh stuff
     #
+    # #
 
     for inst_name in temp_instance_names:
         try:
@@ -2260,10 +2260,10 @@ def _abaqus_worker(template_cae, step_file):
     except Exception:
         pass
 
-    # #
-    # leave this like this
-    # this part
-    # keep this here
+    #
+    # calc part
+    #
+    # output stuff
     #
 
     log('Replacing template instances with imported STEP geometry...')
@@ -2278,7 +2278,7 @@ def _abaqus_worker(template_cae, step_file):
             try:
                 inst = assembly.instances[inst_name]
 
-                # stuff below
+                # main part
                 try:
                     tr = inst.getTranslation()
                 except Exception:
@@ -2310,7 +2310,7 @@ def _abaqus_worker(template_cae, step_file):
                         pass
 
                 # needed here
-                # leave this like this
+                # this part
                 inst.replace(
                     instanceOf=new_part,
                     applyConstraints=False
@@ -2326,7 +2326,7 @@ def _abaqus_worker(template_cae, step_file):
     except Exception as e:
         warn('Assembly regeneration after instance replacement reported: %s' % e)
 
-    # this part
+    #
     new_instance_bboxes = {}
     for inst_name in old_instance_names:
         if inst_name in repo_keys(assembly.instances):
@@ -2335,14 +2335,14 @@ def _abaqus_worker(template_cae, step_file):
             except Exception:
                 pass
 
+    ##
     #
-    # main part
-    # main calc
-    # needed here
-    ####
+    #
+    # keep this
+    ##
 
-    # mesh stuff
-    # meshing part
+    #
+    # this part
     descriptor_cache.clear()
 
     log('')
@@ -2393,11 +2393,11 @@ def _abaqus_worker(template_cae, step_file):
                 )
 
     #
-    # staad output
-    # mesh stuff
-    # meshing part
-    # this part
+    # calc part
     #
+    # output stuff
+    # keep this
+    ##
 
     log('')
     log('Cleaning old template geometry Parts...')
@@ -2408,14 +2408,14 @@ def _abaqus_worker(template_cae, step_file):
 
         new_pn = mapping[old_pn]['new_part']
 
-        # mesh stuff
+        #
         try:
             if old_pn in repo_keys(model.parts):
                 del model.parts[old_pn]
         except Exception as e:
             warn('Could not delete unused old template Part "%s": %s' % (old_pn, e))
 
-        # meshing part
+        # this part
         try:
             if new_pn in repo_keys(model.parts) and old_pn not in repo_keys(model.parts):
                 model.parts.changeKey(fromName=new_pn, toName=old_pn)
@@ -2426,8 +2426,8 @@ def _abaqus_worker(template_cae, step_file):
                 % (new_pn, old_pn, e)
             )
 
-    # mesh here
-    # save files
+    #
+    # calc part
     for idx, new_pn in enumerate(extra_new):
         if new_pn not in repo_keys(model.parts):
             continue
@@ -2448,9 +2448,9 @@ def _abaqus_worker(template_cae, step_file):
     except Exception as e:
         warn('Final assembly regeneration reported: %s' % e)
 
-    #
-    # main calc
     ####
+    #
+    #
 
     log('')
     log('BOUNDARY CONDITION / LOAD REGION CHECK')
@@ -2479,7 +2479,7 @@ def _abaqus_worker(template_cae, step_file):
                 % (x['category'], x['name'], x['class'], rn)
             )
 
-    # stuff below
+    # main part
     # needed here
     log('')
     log('SYMMETRY BC SUMMARY')
@@ -2511,9 +2511,9 @@ def _abaqus_worker(template_cae, step_file):
             'If the template uses symmetry, inspect the output CAE before analysis.'
         )
 
+    # #
     #
-    # this part
-    ####
+    ##
 
     log('')
     log('Saving converted model...')
@@ -2642,8 +2642,8 @@ def _worker_entry():
 
 
 ####
-# this part
-####
+#
+#
 def main():
     if os.environ.get(WORKER_FLAG, '') == '1':
         return _worker_entry()

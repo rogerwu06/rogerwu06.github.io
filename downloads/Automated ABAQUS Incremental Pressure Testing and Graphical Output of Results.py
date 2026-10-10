@@ -38,8 +38,8 @@ import subprocess
 import glob
 
 
-##
-# main part
+####
+# this part
 #
 
 START_PRESSURE = 6
@@ -47,10 +47,10 @@ END_PRESSURE = 120
 PRESSURE_STEP = 1
 
 STEP_NAME = 'Step-1'
-FRAME_NUMBER = -1                 # -1 means use the last available frame
+FRAME_NUMBER = -1                 # calc part
 
-# abaqus stuff
-# files here
+# input stuff
+#
 
 DESIGN_PRESSURE = 9.5
 
@@ -59,14 +59,14 @@ XLSX_NAME = 'PEEQ_Stress_Pressure_Summary.xlsx'
 GRAPH_NAME = 'failure_pressure_prediction.png'
 RUN_INFO_NAME = 'Run_Information.txt'
 
-# abaqus run
-# model stuff
-# file stuff
+# keep this
+# main part
+#
 LAUNCH_DIAGNOSTICS_NAME = 'Abaqus_Launch_Diagnostics.txt'
 WORKER_DONE_NAME = 'Abaqus_Worker_Complete.flag'
 WORKER_ERROR_NAME = 'Abaqus_Worker_Error.txt'
 
-# abaqus part
+# this part
 ENV_WORKER_MODE = 'ABAQUS_PRESSURE_SWEEP_WORKER'
 ENV_CAE_PATH = 'ABAQUS_PRESSURE_SWEEP_CAE'
 ENV_RUN_ROOT = 'ABAQUS_PRESSURE_SWEEP_ROOT'
@@ -75,7 +75,7 @@ ENV_SOURCE_DIR = 'ABAQUS_PRESSURE_SWEEP_SOURCE_DIR'
 
 
 #
-# leave this like this
+# calc part
 ####
 
 def safe_float(value):
@@ -92,9 +92,9 @@ def pressure_text(value):
     return ('%.8f' % value).rstrip('0').rstrip('.')
 
 
-#
-# main part
-#
+# #
+# keep this
+##
 def timestamp_text():
     return time.strftime('%Y%m%d_%H%M%S')
 
@@ -132,13 +132,13 @@ def write_run_information(run_root, source_cae, copied_cae, jobs_dir):
         handle.close()
 
 
-#
-# path stuff
-#
-
 ####
 # this part
-####
+#
+
+##
+#
+# #
 def choose_abaqus_file():
     """Ask the user to manually select the Abaqus launcher used for this run."""
     try:
@@ -196,7 +196,7 @@ def choose_abaqus_file():
 
 
 def choose_cae_file():
-    # file stuff
+    # keep this
     if len(sys.argv) > 1:
         candidate = os.path.abspath(sys.argv[1])
         if os.path.isfile(candidate) and candidate.lower().endswith('.cae'):
@@ -233,7 +233,7 @@ def choose_cae_file():
     except Exception as exc:
         print('Could not open the file picker: %s' % exc)
 
-    # leave this like this
+    # main part
     try:
         user_value = input('Enter the full path to the Abaqus .cae file: ').strip()
     except NameError:
@@ -246,8 +246,8 @@ def choose_cae_file():
     return None
 
 
-#
-# save files
+####
+# this part
 #
 
 def read_results_csv(csv_path):
@@ -277,12 +277,12 @@ def read_results_csv(csv_path):
 
 
 ##
-# needed here
-#
+# input stuff
+# #
 
 #
 # main part
-#
+####
 def clean_xy(x_values, y_values):
     pairs = []
     for x_value, y_value in zip(x_values, y_values):
@@ -292,8 +292,8 @@ def clean_xy(x_values, y_values):
 
     pairs.sort(key=lambda item: item[0])
 
-    # input stuff
-    # inputs here
+    # this part
+    # leave this
     cleaned = []
     for x_value, y_value in pairs:
         if cleaned and abs(cleaned[-1][0] - x_value) < 1.0e-12:
@@ -399,7 +399,7 @@ def create_graph(results, graph_path, model_label):
     fig, ax = plt.subplots(figsize=(15, 6))
     blue = '#4472C4'
 
-    # screen layout
+    # calc part
     if have_pchip and len(x_data) >= 2:
         dense_x = np.linspace(min(x_data), max(x_data), 400)
         curve = PchipInterpolator(x_data, y_data)
@@ -431,8 +431,8 @@ def create_graph(results, graph_path, model_label):
         linewidth=1.5
     )
 
-    # stuff below
-    # results
+    # input stuff
+    #
     y_max = max(25.0, max(y_data) * 1.15 if y_data else 25.0)
     x_max = max(20.0, max(x_data + [DESIGN_PRESSURE]) * 1.10)
 
@@ -482,13 +482,13 @@ def create_graph(results, graph_path, model_label):
     return graph_path
 
 
-# #
-# path stuff
-##
+#
+# main part
+####
 
-####
-# this part
-####
+# #
+#
+##
 def create_excel(results, xlsx_path, graph_path, model_label):
     try:
         from openpyxl import Workbook
@@ -571,7 +571,7 @@ def create_excel(results, xlsx_path, graph_path, model_label):
     summary.column_dimensions['A'].width = 38
     summary.column_dimensions['B'].width = 48
 
-    # main part
+    #
     data_ws = wb.create_sheet('Graph Data')
     graph_headers = [
         model_label + ' Pressure (MPa)',
@@ -613,9 +613,9 @@ def create_excel(results, xlsx_path, graph_path, model_label):
     return xlsx_path
 
 
-#
-# abaqus run
-#
+# #
+# keep this
+##
 
 def _decode_console_output(value):
     if value is None:
@@ -634,8 +634,8 @@ def _powershell_single_quote(value):
     return str(value).replace("'", "''")
 
 
-#
-# main part
+####
+# this part
 #
 def resolve_windows_shortcut(shortcut_path):
     """Return shortcut target/arguments/working directory using WScript.Shell."""
@@ -716,16 +716,16 @@ def _extract_launcher_from_shortcut(shortcut_data):
         if target_lower.endswith(('.bat', '.cmd', '.exe')):
             return target
 
-    # this part
-    # abaqus part
+    # calc part
+    # input stuff
     import re
     quoted = re.findall(r'[\"\']([^\"\']+\.(?:bat|cmd|exe))[\"\']', arguments, flags=re.I)
     for candidate in quoted:
         if os.path.isfile(candidate):
             return candidate
 
-    # path stuff
-    # model stuff
+    #
+    # keep this
     tokens = re.findall(r'([A-Za-z]:\\[^\r\n]+?\.(?:bat|cmd|exe))(?=\s|$)', arguments, flags=re.I)
     for candidate in tokens:
         candidate = candidate.strip(' \"\'')
@@ -796,21 +796,21 @@ def resolve_selected_abaqus_launcher(selected_path):
     )
     return info
 
-####
-# this part
-####
+##
+#
+# #
 def build_abaqus_command(launcher, database_path, worker_script, visible=True):
     """Open the selected CAE first, then run the automation as an Abaqus/CAE script."""
     launcher_text = str(launcher).strip().strip('"')
     database_text = os.path.abspath(database_path)
     worker_text = os.path.abspath(worker_script)
 
-    # abaqus stuff
-    # abaqus part
+    # leave this
+    # calc part
     if visible:
         abaqus_args = 'cae database="{}" script="{}"'.format(database_text, worker_text)
     else:
-        # this part
+        #
         abaqus_args = 'cae noGUI="{}" -- "{}"'.format(worker_text, database_text)
 
     if launcher_text.lower().endswith(('.bat', '.cmd')):
@@ -844,9 +844,9 @@ def write_launch_diagnostics(run_root, launch_info, command, return_code=None, e
     return path
 
 
-#
-# abaqus stuff
-#
+# #
+# keep this
+##
 
 def run_normal_python_launcher():
     print('')
@@ -941,10 +941,10 @@ def run_normal_python_launcher():
     env[ENV_CAE_PATH] = copied_cae
     env[ENV_RUN_ROOT] = run_root
     env[ENV_JOBS_DIR] = jobs_dir
-    # abaqus run
-    # input values
-    # abaqus stuff
-    # files here
+    #
+    # this part
+    # leave this
+    # calc part
     env[ENV_SOURCE_DIR] = source_directory
 
     command = build_abaqus_command(launcher, copied_cae, worker_script, visible=True)
@@ -964,9 +964,9 @@ def run_normal_python_launcher():
         print('Launch diagnostics: %s' % diagnostics_path)
         return 1
 
-    # abaqus run
-    # stuff below
-    # gui stuff
+    #
+    #
+    # keep this
     last_message_time = 0.0
     worker_finished = False
     process_return_code = None
@@ -991,7 +991,7 @@ def run_normal_python_launcher():
 
         process_return_code = process.poll()
         if process_return_code is not None:
-            # leave this like this
+            # main part
             time.sleep(1.0)
             if os.path.exists(done_flag):
                 worker_finished = True
@@ -1034,7 +1034,7 @@ def run_normal_python_launcher():
     graph_path = os.path.join(run_root, GRAPH_NAME)
     xlsx_path = os.path.join(run_root, XLSX_NAME)
 
-    # path stuff
+    #
     model_label = base_name
     created_graph = create_graph(results, graph_path, model_label)
     created_excel = create_excel(results, xlsx_path, created_graph, model_label)
@@ -1055,12 +1055,12 @@ def run_normal_python_launcher():
     return 0
 
 
-#
-# abaqus stuff
-####
+# #
+# leave this
+##
 
+####
 #
-# main part
 #
 def parse_last_step_time_lpf(sta_path):
     """
@@ -1085,14 +1085,14 @@ def parse_last_step_time_lpf(sta_path):
             if len(parts) < 9:
                 continue
 
-            # table part
+            # main part
             try:
                 int(parts[0])
                 int(parts[1])
             except:
                 continue
 
-            # data table
+            #
             # this part
             total_time = safe_float(parts[6])
             step_time_lpf = safe_float(parts[7])
@@ -1156,9 +1156,9 @@ def extract_odb_data(open_odb_function, odb_path, requested_step, requested_fram
             if peeq_values:
                 max_peeq = max(peeq_values)
 
-        # inputs here
-        # get the inputs
-        # input values
+        # leave this
+        # calc part
+        # input stuff
         frame_fraction = None
         try:
             step_period = float(step_obj.timePeriod)
@@ -1212,8 +1212,8 @@ def write_worker_csv(results, csv_path):
         handle.close()
 
 
-####
-# this part
+#
+# main part
 ####
 def _safe_job_model_name(job):
     try:
@@ -1260,9 +1260,9 @@ def _archive_old_job_files(job_name, work_dir, archive_root):
             print('WARNING: Could not archive old job file %s: %s' % (old_path, exc))
 
 
+# #
 #
-# main part
-#
+##
 def _copy_current_job_files(job_name, work_dir, jobs_dir, preexisting_input=False):
     """
     Collect the completed job into the new PressureSweep/Jobs folder.
@@ -1357,8 +1357,8 @@ def _write_failure_diagnostics(run_root, job_name, work_dir, status, submission_
 
 
 ####
-# this part
-####
+#
+#
 def _create_job_from_template(mdb, job_name, model_name, base_job, work_dir):
     """
     Create a job only when the CAE does not already have one for this model.
@@ -1371,7 +1371,7 @@ def _create_job_from_template(mdb, job_name, model_name, base_job, work_dir):
             'model': model_name,
             'scratch': work_dir
         }
-        # run the jobs
+        # main part
         for attr in ('type', 'numCpus', 'numDomains', 'memory', 'memoryUnits',
                      'multiprocessingMode', 'explicitPrecision',
                      'nodalOutputPrecision', 'resultsFormat', 'numGPUs'):
@@ -1422,8 +1422,8 @@ def _copy_old_results_without_moving(job_name, work_dir, archive_root):
             print('WARNING: Could not back up old job file %s: %s' % (old_path, exc))
 
 
-#
-# main part
+####
+# this part
 #
 def _existing_pressure_jobs(mdb_object):
     """
@@ -1451,10 +1451,10 @@ def _existing_pressure_jobs(mdb_object):
 
 
 def run_abaqus_worker():
-    # abaqus run
-    # save files
-    # main part
-    # abaqus part
+    # calc part
+    #
+    #
+    # keep this
     from abaqus import mdb
     from abaqusConstants import OFF
     from odbAccess import openOdb
@@ -1500,8 +1500,8 @@ def run_abaqus_worker():
     for pressure, job_name, model_name in pressure_jobs:
         print('  %s MPa -> %s  [model: %s]' % (pressure_text(pressure), job_name, model_name))
 
-    # abaqus run
-    # save files
+    # main part
+    #
     # this part
     os.chdir(source_dir)
 
@@ -1517,18 +1517,18 @@ def run_abaqus_worker():
         print('Model already attached to job: %s' % model_name)
         print('-' * 78)
 
-        # inputs here
-        # main part
+        # leave this
+        # calc part
         preexisting_input = os.path.exists(os.path.join(source_dir, job_name + '.inp'))
 
-        # stuff below
-        # file stuff
-        # inputs here
+        # input stuff
+        #
+        # keep this
         _copy_old_results_without_moving(job_name, source_dir, archive_dir)
 
+        # main part
+        #
         # this part
-        # jobs here
-        # job stuff
         stale_lock = os.path.join(source_dir, job_name + '.lck')
         if os.path.exists(stale_lock):
             try:
@@ -1541,8 +1541,8 @@ def run_abaqus_worker():
         submission_error = None
 
         try:
-            # abaqus part
-            # job part
+            # leave this
+            #
             job.submit(consistencyChecking=OFF)
             job.waitForCompletion()
             status = str(job.status)
@@ -1561,9 +1561,9 @@ def run_abaqus_worker():
         completed = str(status).upper() == 'COMPLETED'
         failure_stop = 'NO'
 
-        # model stuff
         # input stuff
-        # abaqus part
+        #
+        # keep this
         solver_started = os.path.exists(sta_path) and os.path.getsize(sta_path) > 0
         odb_data = None
         if os.path.exists(odb_path) and (completed or solver_started):
@@ -1620,13 +1620,13 @@ def run_abaqus_worker():
         print('CSV updated: %s' % csv_path)
         print('Collected %d current job files in: %s' % (len(copied_files), jobs_dir))
 
-        # job part
-        # jobs here
+        #
+        #
         if not completed:
             break
 
-    # abaqus stuff
-    # abaqus part
+    # this part
+    # leave this
     try:
         mdb.save()
         print('Copied CAE saved after sweep.')
@@ -1643,9 +1643,9 @@ def run_abaqus_worker():
     return 0
 
 
-#
-# keep this here
-####
+##
+# input stuff
+# #
 
 if __name__ == '__main__':
     if os.environ.get(ENV_WORKER_MODE) == '1':

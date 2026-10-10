@@ -27,19 +27,19 @@ from collections import OrderedDict
 from tkinter import messagebox, ttk
 from typing import Callable, Iterable, List, Sequence
 
-##
-# get the inputs
+####
+# this part
 #
-# #
-# inputs here
 ##
+# input stuff
+# #
 
 
 APP_TITLE = "STAAD.Pro Wind Input Spreadsheet"
-PALE_YELLOW = "#F5F5F5"     # white fill for the basic format
+PALE_YELLOW = "#F5F5F5"     # keep this
 SECTION_GRAY = "#F3F3F3"
-TITLE_BLUE = "#252525"          # old variable name is kept here but it is just black now
-RED = "#8A3B3B"                 # old variable name is kept here but it is just black now
+TITLE_BLUE = "#252525"          # main part
+RED = "#8A3B3B"                 # needed here
 GRID = "#BFC5C9"
 WHITE = "#FFFFFF"
 LIGHT_INPUT = "#FFFFFF"
@@ -55,7 +55,7 @@ NODE_HEADERS = ("NODE", "X", "Y", "Z")
 MEMBER_HEADERS = ("BEAM", "NODEA", "NODE B", "PROPERTY DEFINE", "MATERIAL", "BETA", "LENGTH")
 SECTION_HEADERS = ("prop", "name", "ax", "d", "bf", "tf", "tw", "in", "iy", "ix")
 
-# input values
+# this part
 SAMPLE_NODES = []
 SAMPLE_MEMBERS = []
 SAMPLE_SECTIONS = []
@@ -67,9 +67,9 @@ EXPECTED_GX = []
 
 
 #
-# window stuff
-#
-##
+# calc part
+####
+# #
 
 def _first_font(root: tk.Misc, preferred=("Calibri", "Aptos", "Arial", "Segoe UI")) -> str:
     try:
@@ -82,8 +82,8 @@ def _first_font(root: tk.Misc, preferred=("Calibri", "Aptos", "Arial", "Segoe UI
     return "TkDefaultFont"
 
 
-# input stuff
-#
+# keep this
+##
 
 def _as_number(value: object, *, integer: bool = False, field: str = ""):
     text = str(value).strip()
@@ -103,25 +103,25 @@ def _as_number(value: object, *, integer: bool = False, field: str = ""):
     return number
 
 
-# make the output
-#
+# needed here
+# #
 
 #
-# main part
-#
+# calc part
+####
 def _general_2dp(value: float) -> str:
-    # needed here
+    #
     return f"{value:.2f}".rstrip("0").rstrip(".")
 
 
 def _roundup_2(value: float) -> float:
-    # inputs here
+    # keep this
     return math.ceil(value * 100.0 - 1e-12) / 100.0
 
 
-# path stuff
+# main part
+####
 # #
-#
 
 def _k_factor(l_over_halpha: float) -> float:
     x = l_over_halpha
@@ -140,16 +140,16 @@ def _k_factor(l_over_halpha: float) -> float:
     return 0.95
 
 
-##
-# get the inputs
 #
+# calc part
+####
 # #
-# files here
+# keep this
 ##
 
 ####
 # this part
-####
+#
 def calculate_wind_outputs(
     node_rows: Sequence[Sequence[object]],
     member_rows: Sequence[Sequence[object]],
@@ -160,7 +160,7 @@ def calculate_wind_outputs(
 ):
     """Return (max_height, formatted_gz_lines, formatted_gx_lines)."""
 
-    # input values
+    # calc part
     nodes = {}
     for row_index, row in enumerate(node_rows, start=1):
         if not row or all(str(v).strip() == "" for v in row):
@@ -242,7 +242,7 @@ def calculate_wind_outputs(
             xa, ya, za = nodes[node_a]
             xb, yb, zb = nodes[node_b]
 
-            # leave this like this
+            # output stuff
             if direction == "Z":
                 keep = (xa != xb) or (ya != yb)
             else:
@@ -257,7 +257,7 @@ def calculate_wind_outputs(
             height = min(ya, yb) + height_adjustment
             ce = max((height / 10.0) ** 0.2, 0.90)
 
-            # get the inputs
+            # keep this
             fn = ce * cg * k * 2.1 * q
             ft = fn
             kn_per_m_fn = fn * d / 1000.0
@@ -265,7 +265,7 @@ def calculate_wind_outputs(
             load = _roundup_2(max(kn_per_m_fn, kn_per_m_ft))
             individual.append((beam, f"UNI {code} {_general_2dp(load)}"))
 
-        # input values
+        # main part
         groups = OrderedDict()
         for beam, suffix in individual:
             groups.setdefault(suffix, []).append(str(beam))
@@ -274,9 +274,9 @@ def calculate_wind_outputs(
     return max_height, direction_output("Z"), direction_output("X")
 
 
-# input stuff
-#
+# needed here
 # #
+#
 
 def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     rows: List[List[str]] = []
@@ -292,7 +292,7 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
         else:
             parts = re.split(r"\s+", line)
 
-        # input values
+        # calc part
         try:
             float(parts[0])
         except (ValueError, IndexError):
@@ -310,10 +310,10 @@ def _parse_clipboard_table(text: str, expected_cols: int) -> List[List[str]]:
     return rows
 
 
-##
-# inputs here
+####
 #
-# #
+#
+##
 class EditableTree(tk.Frame):
     def __init__(
         self,
@@ -546,12 +546,12 @@ class EditableTree(tk.Frame):
         editor.bind("<Escape>", cancel)
 
 
-# output stuff
-##
+# needed here
+# #
 
 #
-# main part
-#
+# calc part
+####
 class OutputPanel(tk.Frame):
     def __init__(self, master, title: str, font_name: str):
         super().__init__(master, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
@@ -637,9 +637,9 @@ class OutputPanel(tk.Frame):
         self.update_idletasks()
 
 
-####
-# keep this here
 # #
+# keep this
+##
 
 class ScrollablePage(tk.Frame):
     def __init__(self, master):
@@ -663,12 +663,12 @@ class ScrollablePage(tk.Frame):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def _fit_inner_width(self, event):
-        # window stuff
-        # make the output
+        # needed here
+        # this part
         self.canvas.itemconfigure(self.window_id, width=max(1, event.width))
 
     def _mousewheel(self, event):
-        # leave this like this
+        # leave this
         widget = self.winfo_containing(event.x_root, event.y_root)
         if widget is None or not self._is_descendant(widget):
             return
@@ -683,10 +683,10 @@ class ScrollablePage(tk.Frame):
         return False
 
 
-#
-# inputs here
-#
 ##
+# input stuff
+# #
+#
 
 class WindLoadApp(tk.Tk):
     def __init__(self, *, smoke_test: bool = False):
@@ -716,8 +716,8 @@ class WindLoadApp(tk.Tk):
         if smoke_test:
             self.after(150, self.destroy)
 
-    ####
-    # output here
+    ##
+    # needed here
     # #
     def _configure_styles(self):
         style = ttk.Style(self)
@@ -726,7 +726,7 @@ class WindLoadApp(tk.Tk):
         except tk.TclError:
             pass
 
-        # display stuff
+        # leave this
         ##
         for scrollbar_style in ("Vertical.TScrollbar", "Horizontal.TScrollbar"):
             style.configure(
@@ -786,7 +786,7 @@ class WindLoadApp(tk.Tk):
         wrap = tk.Frame(parent, bg=WHITE)
         wrap.pack(fill="both", expand=True, padx=12, pady=10)
 
-        # tables
+        #
         inst = tk.Frame(wrap, bg=WHITE, highlightbackground=GRID, highlightthickness=1)
         inst.pack(fill="x", pady=(0, 10))
         tk.Label(
@@ -818,7 +818,7 @@ class WindLoadApp(tk.Tk):
             pady=5,
         ).pack(fill="x")
 
-        # get the inputs
+        # output stuff
         top = tk.Frame(wrap, bg=WHITE)
         top.pack(fill="x", pady=(0, 12))
 
@@ -924,7 +924,7 @@ class WindLoadApp(tk.Tk):
             if not readonly:
                 entry.bind("<KeyRelease>", lambda _e: self.schedule_recalc())
 
-        # input values
+        # keep this
         tables = tk.Frame(wrap, bg=WHITE)
         tables.pack(fill="x", pady=(0, 12))
 
@@ -1003,9 +1003,9 @@ class WindLoadApp(tk.Tk):
                 pass
         self._recalc_job = self.after(250, self.recalculate)
 
-    #
-    # inputs here
-    ####
+    ##
+    # needed here
+    # #
     def recalculate(self):
         if self._building:
             return
@@ -1042,8 +1042,8 @@ class WindLoadApp(tk.Tk):
 
 
 
-####
-# this part
+#
+# calc part
 ####
 class SiteStyleWindApp(tk.Tk):
     def __init__(self, *, smoke_test: bool = False):
@@ -1154,8 +1154,8 @@ class SiteStyleWindApp(tk.Tk):
             self.status_text.set(str(exc))
 
 
-# input values
-# #
+# output stuff
+#
 
 def self_test() -> int:
     print("No embedded project dataset is included in this public version.")
