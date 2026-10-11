@@ -8,8 +8,8 @@
 .profile{padding-top:5px}.profile-photo{margin-bottom:18px}.profile-name{margin-top:0!important}.profile-links{margin-top:13px}.profile-links .email:before{content:"@"}.profile-links .linkedin:before{content:"in"}.profile .role,.profile .institution,.profile-focus,.profile-links .github,.profile-links .resume{display:none!important}
 @media(max-width:900px){.sheet-grid-wrap.three{grid-template-columns:1fr}.sheet-params{grid-template-columns:repeat(2,minmax(100px,1fr))}.sheet-params label{border-bottom:1px solid #9da3a7}.project-grid{grid-template-columns:1fr}}@media(max-width:800px){.project-page-tabs a{font-size:11px;margin-right:9px;padding-right:9px}.sheet-grid-wrap,.data-grid.outputs{grid-template-columns:1fr}.project-card{min-height:0}.project-card strong{font-size:15px}}
 /* private simple version */
-body{font-family:Arial,Helvetica,sans-serif!important}
-.brand,.profile-name,.projects-heading,.projects-heading a,.content h1,.content h2{font-family:Arial,Helvetica,sans-serif!important}
+body{font-family:Verdana,Geneva,Tahoma,sans-serif!important}
+.brand,.profile-name,.projects-heading,.projects-heading a,.content h1,.content h2{font-family:"Times New Roman",Times,serif!important}
 .topbar-inner{padding-left:4px;padding-right:4px}
 .layout{gap:22px}
 .content{padding-top:4px}
@@ -18,32 +18,32 @@ body{font-family:Arial,Helvetica,sans-serif!important}
 .project-grid{gap:8px;margin-top:4px;margin-bottom:30px}
 .project-card{padding:11px 12px;min-height:102px;border-color:#aaa;background:#fff}
 .project-card:hover{background:#f4f4f4;border-color:#888}
-.project-card strong{font-family:Arial,Helvetica,sans-serif!important;font-size:15px;line-height:1.35;margin-bottom:6px}
-.project-card span{font-size:12.5px;line-height:1.4;color:#555}
+.project-card strong{font-family:Verdana,Geneva,Tahoma,sans-serif!important;font-size:14px;line-height:1.35;margin-bottom:6px}
+.project-card span{font-size:12px;line-height:1.4;color:#555}
 .home-about{margin-top:10px}
 .project-page-tabs{margin-bottom:20px;padding-bottom:7px}
-.project-page-tabs a{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#0645ad;margin-right:10px;padding-right:10px}
+.project-page-tabs a{font-family:Verdana,Geneva,Tahoma,sans-serif;font-size:11px;color:#0645ad;margin-right:10px;padding-right:10px}
 .project-page-tabs a:hover{text-decoration:underline;color:#0645ad}
 .project-page-tabs a.active{color:#111;font-weight:700;text-decoration:none}
 .tool-shell{border-color:#888}
 .tool-head{background:#eee;border-bottom-color:#888;padding:6px 8px}
 .tool-body{padding:9px}
 .toolbar{gap:10px;margin-bottom:9px}
-.btn,.mode button,.sheet-action,.output-title button{background:#eee!important;border-color:#777!important;padding:4px 7px!important;font-family:Arial,Helvetica,sans-serif!important}
+.btn,.mode button,.sheet-action,.output-title button{background:#eee!important;border-color:#777!important;padding:4px 7px!important;font-family:Verdana,Geneva,Tahoma,sans-serif!important;font-size:11px!important}
 .mode button.active{background:#d8d8d8!important}
 .sheet-params{margin:7px 0 10px;border-color:#888}
-.sheet-params label{background:#e8e8e8;border-color:#999;font-family:Arial,Helvetica,sans-serif}
+.sheet-params label{background:#e8e8e8;border-color:#999;font-family:Verdana,Geneva,Tahoma,sans-serif}
 .sheet-grid-wrap{gap:8px}
 .sheet-block{border-color:#888}
-.sheet-title{background:#e8e8e8;border-bottom-color:#888;padding:4px 6px;font-family:Arial,Helvetica,sans-serif}
+.sheet-title{background:#e8e8e8;border-bottom-color:#888;padding:4px 6px;font-family:Verdana,Geneva,Tahoma,sans-serif}
 .sheet-actions{gap:3px}
-.sheet-table{font-family:Arial,Helvetica,sans-serif;font-size:11px}
+.sheet-table{font-family:Verdana,Geneva,Tahoma,sans-serif;font-size:10px}
 .sheet-table th,.sheet-table td{border-color:#aaa;padding:3px 4px}
 .sheet-table th{background:#ddd}
 .metrics{gap:5px;margin:6px 0 9px}
 .metric{border-color:#999;padding:4px 6px;min-width:100px}
 .output-box{border-color:#888}
-.output-title{background:#e8e8e8;border-bottom-color:#888;padding:4px 6px;font-family:Arial,Helvetica,sans-serif}
+.output-title{background:#e8e8e8;border-bottom-color:#888;padding:4px 6px;font-family:Verdana,Geneva,Tahoma,sans-serif}
 .output-box pre{padding:6px;font-size:11px}
 .tools-line{margin-top:22px!important;padding-top:8px}
-footer{font-size:12px}
+footer{font-size:11px}
