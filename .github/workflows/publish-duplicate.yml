@@ -1,0 +1,25 @@
+name: Publish duplicate under main site
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-duplicate.yml'
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy duplicate site into private folder
+        run: |
+          tmp="$(mktemp -d)"
+          git clone --depth 1 https://github.com/rogerwu06/private.git "$tmp/source"
+          mkdir -p private
+          rsync -a --delete --exclude='.git' --exclude='.github' "$tmp/source/" private/
+      - name: Commit copied site
+        run: |
+          git config user.name "RogerWu"
+          git config user.email "wewf632@gmail.com"
+          git add private
+          git commit -m "Publish duplicate site under private path"
+          git push
